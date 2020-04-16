@@ -1,14 +1,16 @@
 {
   "name": "voice-chat-bot",
-  "version": "1.0.0",
-  "main": "build/server.js",
+  "version": "0.1.0",
+  "main": "build/index.js",
   "scripts": {
     "dev": "tsc -w",
     "build": "tsc",
-    "start": "node ./build/server.js"
+    "start": "node ./build/index.js"
   },
   "dependencies": {
-    "discord.js": "^12.1.1"
+    "@types/ws": "^7.2.4",
+    "discord.js": "^12.1.1",
+    "dotenv": "^8.2.0"
   },
   "devDependencies": {
     "@types/node": "^13.11.1",
