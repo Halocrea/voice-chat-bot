@@ -12,13 +12,19 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
   // Create a voice channel when a user join the "creating" channel
   if (newState.channelID === process.env.CREATING_CHANNEL_ID) {
     // We create the channel
-    const creator = await newState.guild.members.fetch(newState.id);
-    newState.guild.channels.create(`${creator.user.username}'s channel`, { type: 'voice', parent: process.env.VOICE_CATEGORY_ID })
+    try {
+      const creator = await newState.guild.members.fetch(newState.id);
+      const newGuildChannel = await newState.guild.channels.create(`${creator.user.username}'s channel`, { type: 'voice', parent: process.env.VOICE_CATEGORY_ID })
+      const newChannel = await newGuildChannel.fetch();
+      newState.setChannel(newChannel, 'A user creates a new channel');
+    } catch (error) {
+      console.error(error);
+    }
     // TODO: Then we move the user to the new channel
-
   }
 
-  if (oldState.channelID) { // Having null as an old state channel id means that the user wasn't in a vocal channel before
+  // Having null as an old state channel id means that the user wasn't in a vocal channel before
+  if (oldState.channelID) {
     const channelLeft = newState.guild.channels.resolve(oldState.channelID!);
     let memberCount = 0;
     for (const member of channelLeft!.members)
@@ -28,7 +34,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       !memberCount &&
       channelLeft.id !== process.env.CREATING_CHANNEL_ID
     ) {
-      channelLeft.delete()
+      channelLeft.delete('Channel empty')
       .then(() => console.log('channel deleted'))
       .catch(console.error);
     }
