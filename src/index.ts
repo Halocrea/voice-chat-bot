@@ -11,16 +11,16 @@ voiceChatBot.on('message', msg => {
 voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
   // Create a voice channel when a user join the "creating" channel
   if (newState.channelID === process.env.CREATING_CHANNEL_ID) {
-    // We create the channel
     try {
+      // We create the channel
       const creator = await newState.guild.members.fetch(newState.id);
       const newGuildChannel = await newState.guild.channels.create(`${creator.user.username}'s channel`, { type: 'voice', parent: process.env.VOICE_CATEGORY_ID })
+      // We move the user inside his new channel
       const newChannel = await newGuildChannel.fetch();
       newState.setChannel(newChannel, 'A user creates a new channel');
     } catch (error) {
       console.error(error);
     }
-    // TODO: Then we move the user to the new channel
   }
 
   // Having null as an old state channel id means that the user wasn't in a vocal channel before
