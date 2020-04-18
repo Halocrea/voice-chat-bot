@@ -16,7 +16,9 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
     newState.guild.channels.create(`${creator.user.username}'s channel`, { type: 'voice', parent: process.env.VOICE_CATEGORY_ID })
     // TODO: Then we move the user to the new channel
 
-  } else if (oldState.channelID) { // Having null as an old state channel id means that the user wasn't in a vocal channel before
+  }
+
+  if (oldState.channelID) { // Having null as an old state channel id means that the user wasn't in a vocal channel before
     const channelLeft = newState.guild.channels.resolve(oldState.channelID!);
     let memberCount = 0;
     for (const member of channelLeft!.members)
