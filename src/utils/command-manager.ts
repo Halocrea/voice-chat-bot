@@ -65,7 +65,7 @@ export async function permitUser(msg: Message, channel: VoiceChannel) {
       await channel.updateOverwrite(
         allowed,
         { CONNECT: true },
-        `Voice Bot: The owner (${msg.author.username}) wants to allow a user in his channel`
+        `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
       );
     } else {
       msg.channel.send('User not found, please try again.');
