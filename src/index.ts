@@ -13,6 +13,7 @@ import {
   permitUser,
   setUserChannelLimit,
   claimChannel,
+  rejectUser,
 } from './utils/command-manager';
 
 dotenv.config();
@@ -42,6 +43,9 @@ voiceChatBot.on('message', async (msg) => {
             break;
           case 'permit':
             permitUser(msg, channel);
+            break;
+          case 'reject':
+            rejectUser(msg);
             break;
           case 'limit':
             setUserChannelLimit(msg, channel, args);

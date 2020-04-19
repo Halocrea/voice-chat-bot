@@ -75,6 +75,19 @@ export async function permitUser(msg: Message, channel: VoiceChannel) {
   }
 }
 
+export async function rejectUser(msg: Message) {
+  try {
+    const rejected = msg.mentions.members?.first();
+    if (rejected) {
+      await rejected.voice.kick(
+        `Voice Bot: The owner (${msg.author.username}) wants to kick a user (${rejected.user.username}) in his channel`
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export async function setUserChannelLimit(
   msg: Message,
   channel: VoiceChannel,
