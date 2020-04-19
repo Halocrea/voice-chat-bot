@@ -94,8 +94,8 @@ export async function setUserChannelLimit(
   args: string
 ) {
   try {
-    await channel.edit(
-      { userLimit: +args },
+    await channel.setUserLimit(
+      +args,
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
   } catch (error) {
