@@ -6,6 +6,14 @@ import {
   getOwner,
   editOwning,
 } from './utils/owning-manager';
+import {
+  renameChannel,
+  lockChannel,
+  unlockChannel,
+  permitUser,
+  setUserChannelLimit,
+  claimChannel,
+} from './utils/command-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -24,53 +32,22 @@ voiceChatBot.on('message', async (msg) => {
 
         switch (cmd) {
           case 'name':
-            await channel.edit(
-              { name: args },
-              `Voice Bot: Asked by his owner (${msg.author.username})`
-            );
+            renameChannel(msg, channel, args);
             break;
           case 'lock':
-            await channel.overwritePermissions(
-              [
-                {
-                  id: msg.guild?.id!,
-                  deny: ['CONNECT'],
-                },
-                {
-                  id: userId,
-                  allow: ['CONNECT'],
-                },
-                {
-                  id: msg.client.user?.id!,
-                  allow: ['MANAGE_CHANNELS'],
-                },
-              ],
-              `Voice Bot: The owner (${msg.author.username}) wants to lock the channel`
-            );
+            lockChannel(msg, channel, userId);
             break;
           case 'unlock':
-            await channel.lockPermissions();
+            unlockChannel(channel);
             break;
           case 'permit':
+            permitUser(msg, channel);
             break;
           case 'limit':
-            await channel.edit(
-              { userLimit: +args },
-              `Voice Bot: Asked by his owner (${msg.author.username})`
-            );
+            setUserChannelLimit(msg, channel, args);
             break;
           case 'claim':
-            // We need to check if the current owner is in the channel
-            const ownerMember = channel.members.get(userId);
-            if (!ownerMember) {
-              editOwning({
-                ownedChannelId: channel.id,
-                userId: msg.author.id,
-              });
-              msg.channel.send('You are now the owner of the channel');
-            } else {
-              msg.channel.send(`You can't own this channel right now.`);
-            }
+            claimChannel(msg, channel, userId);
             break;
           case 'help':
             msg.channel.send('Help lol');
