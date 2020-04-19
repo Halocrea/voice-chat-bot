@@ -12,6 +12,11 @@ const createOwnings = `CREATE TABLE IF NOT EXISTS Ownings (
 );`;
 db.exec(createOwnings);
 
+export function getOwner(ownedChannelId: string) {
+  const owner = 'SELECT userId FROM Ownings WHERE ownedChannelId = ?';
+  return db.prepare(owner).get(ownedChannelId);
+}
+
 export function addOwning(owning: Owning) {
   const newOwning =
     'INSERT INTO Ownings (ownedChannelId, userId) VALUES (@ownedChannelId, @userId)';

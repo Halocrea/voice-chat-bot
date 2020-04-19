@@ -1,6 +1,6 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
-import { addOwning, removeOwning } from './utils/owning-manager';
+import { addOwning, removeOwning, getOwner } from './utils/owning-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -8,9 +8,25 @@ const voiceChatBot = new discord.Client();
 voiceChatBot.on('message', (msg) => {
   const cmdVoice = process.env.CMD_VOICE;
   if (cmdVoice && msg.content.startsWith(cmdVoice)) {
-    const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
-    const cmd = cmdAndArgs.shift();
-    const args = cmdAndArgs.join(' ').trim();
+    // We have to check if the user is in a channel & if he owns it
+    const channel = msg.member?.voice.channel;
+    if (channel) {
+      const { userId } = getOwner(channel.id);
+      if (userId === msg.author.id) {
+        const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
+        const cmd = cmdAndArgs.shift();
+        const args = cmdAndArgs.join(' ').trim();
+        switch (cmd) {
+          case 'name':
+            channel.edit({ name: args }, 'Voice Bot: Asked by his owner');
+            break;
+        }
+      } else {
+        msg.channel.send('You have to own this channel to run commands');
+      }
+    } else {
+      msg.channel.send('You have to be in a voice channel to run commands.');
+    }
   }
 });
 
