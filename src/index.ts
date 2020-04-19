@@ -6,7 +6,15 @@ dotenv.config();
 const voiceChatBot = new discord.Client();
 
 voiceChatBot.on('message', msg => {
-  // msg.channel.send('rofl tg');
+  const cmdVoice = process.env.CMD_VOICE;
+  if(cmdVoice && msg.content.startsWith(cmdVoice)) {
+    const cmdAndArgs = msg.content
+      .replace(cmdVoice, '')
+      .trim()
+      .split(' ');
+    const cmd = cmdAndArgs.shift();
+    const args = cmdAndArgs.join(' ').trim();
+  }
 });
 
 voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
