@@ -3,6 +3,7 @@ build
 .env
 
 saves/*
+!saves/README.md
 
 # Log files
 npm-debug.log*
