@@ -1,25 +1,13 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:recommended"
-  ],
+  "extends": ["tslint:recommended"],
   "jsRules": {},
   "rules": {
     "arrow-parens": false,
     "class-name": false,
     "interface-name": false,
-    "no-console": [
-      true,
-      "debug",
-      "info",
-      "time",
-      "timeEnd",
-      "trace"
-    ],
-    "quotemark": [
-      true,
-      "single"
-    ],
+    "no-console": [true, "debug", "info", "time", "timeEnd", "trace"],
+    "quotemark": [true, "single"],
     "trailing-comma": false
   },
   "rulesDirectory": []

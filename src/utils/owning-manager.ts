@@ -13,7 +13,8 @@ const createOwnings = `CREATE TABLE IF NOT EXISTS Ownings (
 db.exec(createOwnings);
 
 export function addOwning(owning: Owning) {
-  const newOwning = 'INSERT INTO Ownings (ownedChannelId, userId) VALUES (@ownedChannelId, @userId)';
+  const newOwning =
+    'INSERT INTO Ownings (ownedChannelId, userId) VALUES (@ownedChannelId, @userId)';
   db.prepare(newOwning).run(owning);
 }
 
