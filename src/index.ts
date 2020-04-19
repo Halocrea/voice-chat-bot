@@ -1,5 +1,6 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
+import { addOwning, removeOwning } from './utils/file-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -18,6 +19,10 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       // We move the user inside his new channel
       const newChannel = await newGuildChannel.fetch();
       newState.setChannel(newChannel, 'A user creates a new channel');
+      addOwning({
+        userId: newState.id,
+        ownedChannelId: newChannel.id
+      });
     } catch (error) {
       console.error(error);
     }
@@ -25,15 +30,16 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
 
   // Having null as an old state channel id means that the user wasn't in a vocal channel before
   if (oldState.channelID) {
-    const channelLeft = newState.guild.channels.resolve(oldState.channelID!);
+    const channelLeft = newState.guild.channels.resolve(oldState.channelID);
     let memberCount = 0;
-    for (const member of channelLeft!.members)
+    for (const _ of channelLeft!.members)
       memberCount++
     if (
       channelLeft &&
       !memberCount &&
       channelLeft.id !== process.env.CREATING_CHANNEL_ID
     ) {
+      removeOwning(channelLeft.id);
       channelLeft.delete('Channel empty')
       .then(() => console.log('channel deleted'))
       .catch(console.error);
