@@ -39,7 +39,7 @@ voiceChatBot.on('message', async (msg) => {
             lockChannel(msg, channel, userId);
             break;
           case 'unlock':
-            unlockChannel(channel);
+            unlockChannel(msg, channel);
             break;
           case 'permit':
             permitUser(msg, channel);

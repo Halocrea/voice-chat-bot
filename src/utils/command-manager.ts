@@ -11,6 +11,7 @@ export async function renameChannel(
       { name: args },
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
+    msg.channel.send('The channel has been correctly renamed!');
   } catch (error) {
     console.error(error);
   }
@@ -45,14 +46,16 @@ export async function lockChannel(
       `Voice Bot: The owner (${msg.author.username}) wants to lock the channel`
     );
     await channel.updateOverwrite(userId, { CONNECT: true });
+    msg.channel.send('The channel is now locked.');
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function unlockChannel(channel: VoiceChannel) {
+export async function unlockChannel(msg: Message, channel: VoiceChannel) {
   try {
     await channel.lockPermissions();
+    msg.channel.send('The channel is no longer locked.');
   } catch (error) {
     console.error(error);
   }
@@ -67,6 +70,7 @@ export async function permitUser(msg: Message, channel: VoiceChannel) {
         { CONNECT: true },
         `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
       );
+      msg.channel.send(`${allowed.user.username} is now permitted!`);
     } else {
       msg.channel.send('User not found, please try again.');
     }
@@ -82,6 +86,7 @@ export async function rejectUser(msg: Message) {
       await rejected.voice.kick(
         `Voice Bot: The owner (${msg.author.username}) wants to kick a user (${rejected.user.username}) in his channel`
       );
+      msg.channel.send(`${rejected.user.username} has been kicked!`);
     }
   } catch (error) {
     console.log(error);
@@ -98,6 +103,7 @@ export async function setUserChannelLimit(
       +args,
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
+    msg.channel.send('The user limit has correctly been set!');
   } catch (error) {
     console.error(error);
   }
@@ -115,7 +121,7 @@ export async function claimChannel(
       ownedChannelId: channel.id,
       userId: msg.author.id,
     });
-    msg.channel.send('You are now the owner of the channel');
+    msg.channel.send('You are now the owner of the channel!');
   } else {
     msg.channel.send(`You can't own this channel right now.`);
   }
