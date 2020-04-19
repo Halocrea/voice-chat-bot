@@ -99,11 +99,15 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       !memberCount &&
       channelLeft.id !== process.env.CREATING_CHANNEL_ID
     ) {
-      await channelLeft.lockPermissions();
-      channelLeft
-        .delete('Channel empty')
-        .then(() => removeOwning(channelLeft.id))
-        .catch(console.error);
+      try {
+        await channelLeft.lockPermissions();
+        channelLeft
+          .delete('Channel empty')
+          .then(() => removeOwning(channelLeft.id))
+          .catch(console.error);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 });
