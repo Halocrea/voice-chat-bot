@@ -1,6 +1,6 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
-import { addOwning, removeOwning } from './utils/file-manager';
+import { addOwning, removeOwning } from './utils/owning-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
