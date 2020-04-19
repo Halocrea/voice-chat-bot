@@ -2,6 +2,8 @@
 
 ## Installation
 
+TODO: Tell to install node-gym & typescript globally
+
 ### Setup
 ```
 npm install
