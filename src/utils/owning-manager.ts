@@ -23,7 +23,10 @@ export function addOwning(owning: Owning) {
   db.prepare(newOwning).run(owning);
 }
 
-// export function editOwning() {};
+export function editOwning(owning: Owning) {
+  const updateOwning = 'UPDATE Ownings SET userId = ? where ownedChannelId = ?';
+  db.prepare(updateOwning).run([owning.userId, owning.ownedChannelId]);
+}
 
 export function removeOwning(channelId: string) {
   const deleteOwning = 'DELETE FROM Ownings WHERE ownedChannelId = ?';
