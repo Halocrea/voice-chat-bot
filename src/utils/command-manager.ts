@@ -1,11 +1,26 @@
 import { Message, VoiceChannel, Client } from 'discord.js';
 import { editOwning } from './owning-manager';
+import {
+  getChannelName,
+  editHistoryName,
+  addHistoryName,
+} from './history-name-manager';
 
 export async function renameChannel(
   msg: Message,
   channel: VoiceChannel,
   args: string
 ) {
+  const historyName = getChannelName(msg.author.id);
+  const newHistoryName = {
+    userId: msg.author.id,
+    channelName: args,
+  };
+  if (historyName) {
+    editHistoryName(newHistoryName);
+  } else {
+    addHistoryName(newHistoryName);
+  }
   try {
     await channel.edit(
       { name: args },
@@ -23,23 +38,6 @@ export async function lockChannel(
   userId: string
 ) {
   try {
-    // await channel.overwritePermissions(
-    //   [
-    //     {
-    //       id: msg.guild?.id!,
-    //       deny: ['CONNECT'],
-    //     },
-    //     {
-    //       id: userId,
-    //       allow: ['CONNECT'],
-    //     },
-    //     {
-    //       id: msg.client.user?.id!,
-    //       allow: ['MANAGE_CHANNELS'],
-    //     },
-    //   ],
-    //   `Voice Bot: The owner (${msg.author.username}) wants to lock the channel`
-    // );
     await channel.updateOverwrite(
       msg.guild?.id!,
       { CONNECT: false },

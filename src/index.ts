@@ -16,6 +16,7 @@ import {
   rejectUser,
   generateHelpEmbed,
 } from './utils/command-manager';
+import { getChannelName } from './utils/history-name-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -83,8 +84,10 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
     try {
       // We create the channel
       const creator = await newState.guild.members.fetch(newState.id);
+      const channelName =
+        getChannelName(creator.user.id) ?? `${creator.user.username}'s channel`;
       const newGuildChannel = await newState.guild.channels.create(
-        `${creator.user.username}'s channel`,
+        channelName,
         {
           type: 'voice',
           parent: process.env.VOICE_CATEGORY_ID,
