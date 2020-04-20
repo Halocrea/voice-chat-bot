@@ -98,6 +98,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
     if (
       channelLeft &&
       !memberCount &&
+      channelLeft.parentID === process.env.VOICE_CATEGORY_ID &&
       channelLeft.id !== process.env.CREATING_CHANNEL_ID
     ) {
       try {
