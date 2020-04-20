@@ -111,6 +111,14 @@ export async function rejectUser(
         `Kicked user (${rejected.user.username}) locked out of the channel`
       );
       msg.channel.send(`${rejected.user.username} has been kicked!`);
+      setTimeout(() => {
+        msg.channel.bulkDelete(2);
+      }, 2000);
+    } else {
+      msg.channel.send('User not found, please try again.');
+      setTimeout(() => {
+        msg.channel.bulkDelete(2);
+      }, 2000);
     }
   } catch (error) {
     console.log(error);
