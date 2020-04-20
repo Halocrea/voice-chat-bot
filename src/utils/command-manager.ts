@@ -132,7 +132,7 @@ export function generateHelpEmbed(client: Client) {
     embed: {
       author: {
         name: client.user?.username,
-        icon_url: client.user?.avatarURL,
+        icon_url: client.user?.avatarURL(),
       },
       title: 'Help',
       description: 'Commands list',
@@ -164,7 +164,7 @@ export function generateHelpEmbed(client: Client) {
       ],
       timestamp: new Date(),
       footer: {
-        icon_url: client.user?.avatarURL,
+        icon_url: client.user?.avatarURL(),
       },
     },
   };
