@@ -92,9 +92,11 @@ export async function permitUser(
   }
 }
 
-export async function rejectUser(msg: Message) {
+export async function rejectUser(msg: Message, args: string) {
   try {
-    const rejected = msg.mentions.members?.first();
+    const rejected =
+      msg.mentions.members?.first() ??
+      (await findUserInGuildByName(msg.guild!, args));
     if (rejected) {
       await rejected.voice.kick(
         `Voice Bot: The owner (${msg.author.username}) wants to kick a user (${rejected.user.username}) in his channel`
