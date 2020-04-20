@@ -90,7 +90,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
 
       const historyPermissions = getAllHistoryPermissions(creator.user.id);
       let permissions: discord.OverwriteResolvable[] = [];
-      if (historyPermissions) {
+      if (historyPermissions && historyPermissions.length > 0) {
         // We add every permission registred
         permissions = historyPermissions.map((perm) => ({
           id: perm.permittedUserId,
