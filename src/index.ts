@@ -54,7 +54,7 @@ voiceChatBot.on('message', async (msg) => {
               permitUser(msg, channel, args);
               break;
             case 'reject':
-              rejectUser(msg, args);
+              rejectUser(msg, channel, args);
               break;
             case 'limit':
               setUserChannelLimit(msg, channel, args);

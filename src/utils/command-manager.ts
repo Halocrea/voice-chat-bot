@@ -92,7 +92,11 @@ export async function permitUser(
   }
 }
 
-export async function rejectUser(msg: Message, args: string) {
+export async function rejectUser(
+  msg: Message,
+  channel: VoiceChannel,
+  args: string
+) {
   try {
     const rejected =
       msg.mentions.members?.first() ??
@@ -100,6 +104,11 @@ export async function rejectUser(msg: Message, args: string) {
     if (rejected) {
       await rejected.voice.kick(
         `Voice Bot: The owner (${msg.author.username}) wants to kick a user (${rejected.user.username}) in his channel`
+      );
+      channel.updateOverwrite(
+        rejected,
+        { CONNECT: false },
+        `Kicked user (${rejected.user.username}) locked out of the channel`
       );
       msg.channel.send(`${rejected.user.username} has been kicked!`);
     }
