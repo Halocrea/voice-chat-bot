@@ -1,4 +1,4 @@
-import { Message, VoiceChannel, Client } from 'discord.js';
+import { Message, VoiceChannel, Client, Guild } from 'discord.js';
 import { editOwning } from './owning-manager';
 import {
   getChannelName,
@@ -64,9 +64,15 @@ export async function unlockChannel(msg: Message, channel: VoiceChannel) {
   }
 }
 
-export async function permitUser(msg: Message, channel: VoiceChannel) {
+export async function permitUser(
+  msg: Message,
+  channel: VoiceChannel,
+  args: string
+) {
   try {
-    const allowed = msg.mentions.members?.first();
+    const allowed =
+      msg.mentions.members?.first() ??
+      (await findUserInGuildByName(msg.guild!, args));
     if (allowed) {
       await channel.updateOverwrite(
         allowed,
@@ -175,4 +181,17 @@ export function generateHelpEmbed(client: Client) {
       },
     },
   };
+}
+
+async function findUserInGuildByName(guild: Guild, name: string) {
+  let member;
+  try {
+    const members = await guild.members.fetch();
+    member = members.find(
+      (user) => user.nickname === name || user.user.username === name
+    );
+  } catch (error) {
+    console.error(error);
+  }
+  return member;
 }
