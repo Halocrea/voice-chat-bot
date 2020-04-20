@@ -14,56 +14,65 @@ import {
   setUserChannelLimit,
   claimChannel,
   rejectUser,
+  generateHelpEmbed,
 } from './utils/command-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
 
+voiceChatBot.on('ready', () => {
+  voiceChatBot.user?.setActivity(`${process.env.CMD_VOICE} help`, {
+    type: 'LISTENING',
+  });
+});
+
 voiceChatBot.on('message', async (msg) => {
   const cmdVoice = process.env.CMD_VOICE;
   if (cmdVoice && msg.content.startsWith(cmdVoice)) {
     // We have to check if the user is in a channel & if he owns it
-    const channel = msg.member?.voice.channel;
-    if (channel) {
-      const { userId } = getOwner(channel.id);
-      const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
-      const cmd = cmdAndArgs.shift();
-      const args = cmdAndArgs.join(' ').trim();
-      if (userId === msg.author.id) {
-        switch (cmd) {
-          case 'name':
-            renameChannel(msg, channel, args);
-            break;
-          case 'lock':
-            lockChannel(msg, channel, userId);
-            break;
-          case 'unlock':
-            unlockChannel(msg, channel);
-            break;
-          case 'permit':
-            permitUser(msg, channel);
-            break;
-          case 'reject':
-            rejectUser(msg);
-            break;
-          case 'limit':
-            setUserChannelLimit(msg, channel, args);
-            break;
-          default:
-            msg.channel.send(
-              'Unknown command, please try again or use help command.'
-            );
-            break;
+    const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
+    const cmd = cmdAndArgs.shift();
+    const args = cmdAndArgs.join(' ').trim();
+    if (cmd !== 'help') {
+      const channel = msg.member?.voice.channel;
+      if (channel) {
+        const { userId } = getOwner(channel.id);
+        if (userId === msg.author.id) {
+          switch (cmd) {
+            case 'name':
+              renameChannel(msg, channel, args);
+              break;
+            case 'lock':
+              lockChannel(msg, channel, userId);
+              break;
+            case 'unlock':
+              unlockChannel(msg, channel);
+              break;
+            case 'permit':
+              permitUser(msg, channel);
+              break;
+            case 'reject':
+              rejectUser(msg);
+              break;
+            case 'limit':
+              setUserChannelLimit(msg, channel, args);
+              break;
+            default:
+              msg.channel.send(
+                'Unknown command, please try again or use help command.'
+              );
+              break;
+          }
+        } else if (cmd === 'claim') {
+          claimChannel(msg, channel, userId);
+        } else {
+          msg.channel.send('You have to own this channel to run commands');
         }
-      } else if (cmd === 'claim') {
-        claimChannel(msg, channel, userId);
-      } else if (cmd === 'help') {
-        msg.channel.send('Help lol');
       } else {
-        msg.channel.send('You have to own this channel to run commands');
+        msg.channel.send('You have to be in a voice channel to run commands.');
       }
     } else {
-      msg.channel.send('You have to be in a voice channel to run commands.');
+      msg.channel.send(generateHelpEmbed(voiceChatBot));
     }
   }
 });

@@ -1,4 +1,4 @@
-import { Message, VoiceChannel } from 'discord.js';
+import { Message, VoiceChannel, Client } from 'discord.js';
 import { editOwning } from './owning-manager';
 
 export async function renameChannel(
@@ -125,4 +125,47 @@ export async function claimChannel(
   } else {
     msg.channel.send(`You can't own this channel right now.`);
   }
+}
+
+export function generateHelpEmbed(client: Client) {
+  return {
+    embed: {
+      author: {
+        name: client.user?.username,
+        icon_url: client.user?.avatarURL,
+      },
+      title: 'Help',
+      description: 'Commands list',
+      fields: [
+        {
+          name: 'name your_channel_name',
+          value: 'Allows you to rename your channel',
+        },
+        {
+          name: 'lock',
+          value: 'Allows you to lock your channel, nobody can join it',
+        },
+        {
+          name: 'permit username',
+          value: 'Allows a user to enter your locked channel',
+        },
+        {
+          name: 'unlock',
+          value: 'Unlocks your channel to everyone',
+        },
+        {
+          name: 'reject',
+          value: 'Kicks a user out of your channel',
+        },
+        {
+          name: 'limit',
+          value: 'Sets a user limit to your channel',
+        },
+      ],
+      timestamp: new Date(),
+      footer: {
+        icon_url: client.user?.avatarURL,
+      },
+    },
+  };
 }
