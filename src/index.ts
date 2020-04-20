@@ -26,11 +26,10 @@ voiceChatBot.on('message', async (msg) => {
     const channel = msg.member?.voice.channel;
     if (channel) {
       const { userId } = getOwner(channel.id);
+      const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
+      const cmd = cmdAndArgs.shift();
+      const args = cmdAndArgs.join(' ').trim();
       if (userId === msg.author.id) {
-        const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
-        const cmd = cmdAndArgs.shift();
-        const args = cmdAndArgs.join(' ').trim();
-
         switch (cmd) {
           case 'name':
             renameChannel(msg, channel, args);
@@ -50,18 +49,16 @@ voiceChatBot.on('message', async (msg) => {
           case 'limit':
             setUserChannelLimit(msg, channel, args);
             break;
-          case 'claim':
-            claimChannel(msg, channel, userId);
-            break;
-          case 'help':
-            msg.channel.send('Help lol');
-            break;
           default:
             msg.channel.send(
               'Unknown command, please try again or use help command.'
             );
             break;
         }
+      } else if (cmd === 'claim') {
+        claimChannel(msg, channel, userId);
+      } else if (cmd === 'help') {
+        msg.channel.send('Help lol');
       } else {
         msg.channel.send('You have to own this channel to run commands');
       }
