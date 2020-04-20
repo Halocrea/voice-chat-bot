@@ -76,7 +76,21 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       const creator = await newState.guild.members.fetch(newState.id);
       const newGuildChannel = await newState.guild.channels.create(
         `${creator.user.username}'s channel`,
-        { type: 'voice', parent: process.env.VOICE_CATEGORY_ID }
+        {
+          type: 'voice',
+          parent: process.env.VOICE_CATEGORY_ID,
+          permissionOverwrites: [
+            {
+              id: newState.client.user!.id,
+              allow: [
+                'MANAGE_CHANNELS',
+                'MANAGE_ROLES',
+                'VIEW_CHANNEL',
+                'CONNECT',
+              ],
+            },
+          ],
+        }
       );
       // We move the user inside his new channel
       const newChannel = await newGuildChannel.fetch();
@@ -113,23 +127,5 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
     }
   }
 });
-
-function claim(
-  msg: discord.Message,
-  channel: discord.VoiceChannel,
-  ownerId: string
-) {
-  // We need to check if the current owner is in the channel
-  const ownerMember = channel.members.get(ownerId);
-  if (!ownerMember) {
-    editOwning({
-      ownedChannelId: channel.id,
-      userId: msg.author.id,
-    });
-    msg.channel.send('You are now the owner of the channel');
-  } else {
-    msg.channel.send(`You can't own this channel right now.`);
-  }
-}
 
 voiceChatBot.login(process.env.TOKEN);
