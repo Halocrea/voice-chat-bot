@@ -17,6 +17,7 @@ import {
   generateHelpEmbed,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
+import { getAllHistoryPermissions } from './utils/history-permission-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -86,22 +87,38 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       const creator = await newState.guild.members.fetch(newState.id);
       const channelName =
         getChannelName(creator.user.id) ?? `${creator.user.username}'s channel`;
+
+      const historyPermissions = getAllHistoryPermissions(creator.user.id);
+      let permissions: discord.OverwriteResolvable[] = [];
+      if (historyPermissions) {
+        // We add every permission registred
+        permissions = historyPermissions.map((perm) => ({
+          id: perm.permittedUserId,
+          allow: ['CONNECT'],
+        }));
+        // We add the owner
+        permissions.push({
+          id: creator.id,
+          allow: ['CONNECT'],
+        });
+        // We deny everyone
+        permissions.push({
+          id: newState.guild.id,
+          deny: ['CONNECT'],
+        });
+      }
+      // The bot permissions
+      permissions.push({
+        id: newState.client.user!.id,
+        allow: ['MANAGE_CHANNELS', 'MANAGE_ROLES', 'VIEW_CHANNEL', 'CONNECT'],
+      });
+
       const newGuildChannel = await newState.guild.channels.create(
         channelName,
         {
           type: 'voice',
           parent: process.env.VOICE_CATEGORY_ID,
-          permissionOverwrites: [
-            {
-              id: newState.client.user!.id,
-              allow: [
-                'MANAGE_CHANNELS',
-                'MANAGE_ROLES',
-                'VIEW_CHANNEL',
-                'CONNECT',
-              ],
-            },
-          ],
+          permissionOverwrites: permissions,
         }
       );
       // We move the user inside his new channel

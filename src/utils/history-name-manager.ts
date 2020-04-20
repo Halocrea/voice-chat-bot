@@ -6,15 +6,15 @@ const db = new Database(path.join(__dirname, '../../saves/history_name.db'), {
   verbose: console.log,
 });
 
-const createOwnings = `CREATE TABLE IF NOT EXISTS History_names (
+const createHistoryNames = `CREATE TABLE IF NOT EXISTS History_names (
   userId VARCHAR(30) PRIMARY KEY,
   channelName VARCHAR(255) NOT NULL
 );`;
-db.exec(createOwnings);
+db.exec(createHistoryNames);
 
 export function getChannelName(userId: string) {
   const historyName = 'SELECT channelName FROM History_names WHERE userId = ?';
-  return db.prepare(historyName).get(userId).channelName;
+  return db.prepare(historyName).get(userId)?.channelName;
 }
 
 export function addHistoryName(historyName: HistoryName) {

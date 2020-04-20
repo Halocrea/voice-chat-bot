@@ -5,6 +5,10 @@ import {
   editHistoryName,
   addHistoryName,
 } from './history-name-manager';
+import {
+  addHistoryPermission,
+  deleteAllHistoryPermissions,
+} from './history-permission-manager';
 
 export async function renameChannel(
   msg: Message,
@@ -53,6 +57,7 @@ export async function lockChannel(
 export async function unlockChannel(msg: Message, channel: VoiceChannel) {
   try {
     await channel.lockPermissions();
+    deleteAllHistoryPermissions(msg.author.id);
     msg.channel.send('The channel is no longer locked.');
   } catch (error) {
     console.error(error);
@@ -68,6 +73,10 @@ export async function permitUser(msg: Message, channel: VoiceChannel) {
         { CONNECT: true },
         `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
       );
+      addHistoryPermission({
+        userId: msg.author.id,
+        permittedUserId: allowed.user.id,
+      });
       msg.channel.send(`${allowed.user.username} is now permitted!`);
     } else {
       msg.channel.send('User not found, please try again.');
