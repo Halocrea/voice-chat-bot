@@ -159,6 +159,23 @@ export async function claimChannel(
   }
 }
 
+export async function setChannelBitrate(
+  msg: Message,
+  channel: VoiceChannel,
+  args: string
+) {
+  const bitrate = +args;
+  if (bitrate >= 8 && bitrate <= 96) {
+    try {
+      await channel.setBitrate(bitrate);
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    msg.channel.send('Please give a number between 8kbps and 96kbps.');
+  }
+}
+
 export function generateHelpEmbed(client: Client) {
   return {
     embed: {
@@ -178,7 +195,7 @@ export function generateHelpEmbed(client: Client) {
           value: 'Allows you to lock your channel, nobody can join it',
         },
         {
-          name: 'permit username',
+          name: 'permit @someone/username',
           value: 'Allows a user to enter your locked channel',
         },
         {
@@ -186,12 +203,16 @@ export function generateHelpEmbed(client: Client) {
           value: 'Unlocks your channel to everyone',
         },
         {
-          name: 'reject',
+          name: 'reject @someone/username',
           value: 'Kicks a user out of your channel',
         },
         {
-          name: 'limit',
+          name: 'limit <number>',
           value: 'Sets a user limit to your channel',
+        },
+        {
+          name: 'bitrate <number>',
+          value: 'Sets the channel bitrate',
         },
       ],
       timestamp: new Date(),

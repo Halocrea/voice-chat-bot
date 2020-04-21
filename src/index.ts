@@ -17,6 +17,7 @@ import {
   generateHelpEmbed,
   clearChannel,
   findUserNicknameInGuildById,
+  setChannelBitrate,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
 import {
@@ -63,6 +64,9 @@ voiceChatBot.on('message', async (msg) => {
               break;
             case 'limit':
               setUserChannelLimit(msg, channel, args);
+              break;
+            case 'bitrate':
+              setChannelBitrate(msg, channel, args);
               break;
             default:
               msg.channel.send(
