@@ -212,6 +212,8 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
                   }
                 })
                 .catch(() => {
+                  // We clear his history
+                  deleteAllHistoryPermissions(creatorId);
                   msg.delete();
                 });
             })
