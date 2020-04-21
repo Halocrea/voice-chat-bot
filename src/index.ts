@@ -15,9 +15,14 @@ import {
   claimChannel,
   rejectUser,
   generateHelpEmbed,
+  clearChannel,
+  findUserNicknameInGuildById,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
-import { getAllHistoryPermissions } from './utils/history-permission-manager';
+import {
+  getAllHistoryPermissions,
+  deleteAllHistoryPermissions,
+} from './utils/history-permission-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -84,50 +89,135 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
   if (newState.channelID === process.env.CREATING_CHANNEL_ID) {
     try {
       // We create the channel
-      const creator = await newState.guild.members.fetch(newState.id);
+      const creatorId = newState.id;
+      const creator = await newState.guild.members.fetch(creatorId);
       const channelName =
         getChannelName(creator.user.id) ?? `${creator.user.username}'s channel`;
-
-      const historyPermissions = getAllHistoryPermissions(creator.user.id);
-      let permissions: discord.OverwriteResolvable[] = [];
-      if (historyPermissions && historyPermissions.length > 0) {
-        // We add every permission registred
-        permissions = historyPermissions.map((perm) => ({
-          id: perm.permittedUserId,
-          allow: ['CONNECT'],
-        }));
-        // We add the owner
-        permissions.push({
-          id: creator.id,
-          allow: ['CONNECT'],
-        });
-        // We deny everyone
-        permissions.push({
-          id: newState.guild.id,
-          deny: ['CONNECT'],
-        });
-      }
-      // The bot permissions
-      permissions.push({
-        id: newState.client.user!.id,
-        allow: ['MANAGE_CHANNELS', 'MANAGE_ROLES', 'VIEW_CHANNEL', 'CONNECT'],
-      });
 
       const newGuildChannel = await newState.guild.channels.create(
         channelName,
         {
           type: 'voice',
           parent: process.env.VOICE_CATEGORY_ID,
-          permissionOverwrites: permissions,
+          permissionOverwrites: [
+            {
+              id: newState.client.user!.id,
+              allow: [
+                'MANAGE_CHANNELS',
+                'MANAGE_ROLES',
+                'VIEW_CHANNEL',
+                'CONNECT',
+              ],
+            },
+          ],
         }
       );
+
       // We move the user inside his new channel
       const newChannel = await newGuildChannel.fetch();
       newState.setChannel(newChannel, 'A user creates a new channel');
       addOwning({
-        userId: newState.id,
+        userId: creatorId,
         ownedChannelId: newChannel.id,
       });
+
+      // We ask the user if he wants to load his last permissions
+      const historyPermissions = getAllHistoryPermissions(creator.user.id);
+      if (historyPermissions && historyPermissions.length > 0) {
+        const commandsChannel = newState.guild.channels.resolve(
+          process.env.CMD_CHANNEL_ID!
+        ) as discord.TextChannel;
+        if (commandsChannel && commandsChannel.type === 'text') {
+          // We get the nickname of each potential allowed member
+          let allowedMembers = '';
+          try {
+            const allowedIdsList = historyPermissions.map(
+              (perm) => perm.permittedUserId
+            );
+            const members = await newState.guild.members.fetch({
+              user: allowedIdsList,
+            });
+            allowedMembers = members
+              .map((user) => user.nickname ?? user.user.username)
+              .join('\n');
+          } catch (error) {
+            console.error(error);
+          }
+
+          commandsChannel
+            .send({
+              embed: {
+                title:
+                  'Do you want to lock your channel and load your last permissions?',
+                description: `Those members would be allowed:\n\n${allowedMembers}`,
+                color: 7944435,
+                timestamp: new Date(),
+              },
+            })
+            .then((msg) => {
+              const accept = '✅';
+              const deline = '❌';
+
+              msg.react(accept);
+              msg.react(deline);
+              msg
+                .awaitReactions(
+                  (reaction, user) =>
+                    [accept, deline].includes(reaction.emoji.name) &&
+                    user.id === creatorId,
+                  {
+                    max: 1,
+                    time: 2 * 60000,
+                    errors: ['time'],
+                  }
+                )
+                .then((collected) => {
+                  const reaction = collected.first();
+                  if (reaction?.emoji.name === accept) {
+                    // We update every allowed user
+                    const permissions: discord.OverwriteResolvable[] = historyPermissions.map(
+                      (perm) => ({
+                        id: perm.permittedUserId,
+                        allow: ['CONNECT'],
+                      })
+                    );
+                    // We add the owner
+                    permissions.push({
+                      id: creator.id,
+                      allow: ['CONNECT'],
+                    });
+                    // We deny everyone
+                    permissions.push({
+                      id: newState.guild.id,
+                      deny: ['CONNECT'],
+                    });
+                    // We add the bot
+                    permissions.push({
+                      id: newState.client.user!.id,
+                      allow: [
+                        'MANAGE_CHANNELS',
+                        'MANAGE_ROLES',
+                        'VIEW_CHANNEL',
+                        'CONNECT',
+                      ],
+                    });
+                    newChannel.edit({ permissionOverwrites: permissions });
+                    clearChannel(commandsChannel, 1);
+                  } else {
+                    // We clear his history
+                    deleteAllHistoryPermissions(creatorId);
+                    setTimeout(() => {
+                      msg.delete();
+                    }, 1000);
+                  }
+                })
+                .catch(() => {
+                  msg.delete();
+                });
+            })
+            .catch(console.error);
+        }
+      }
     } catch (error) {
       console.error(error);
     }

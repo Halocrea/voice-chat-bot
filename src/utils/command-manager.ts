@@ -1,4 +1,4 @@
-import { Message, VoiceChannel, Client, Guild } from 'discord.js';
+import { Message, VoiceChannel, Client, Guild, TextChannel } from 'discord.js';
 import { editOwning } from './owning-manager';
 import {
   getChannelName,
@@ -111,14 +111,10 @@ export async function rejectUser(
         `Kicked user (${rejected.user.username}) locked out of the channel`
       );
       msg.channel.send(`${rejected.user.username} has been kicked!`);
-      setTimeout(() => {
-        msg.channel.bulkDelete(2);
-      }, 2000);
+      clearChannel(msg.channel as TextChannel, 2);
     } else {
       msg.channel.send('User not found, please try again.');
-      setTimeout(() => {
-        msg.channel.bulkDelete(2);
-      }, 2000);
+      clearChannel(msg.channel as TextChannel, 2);
     }
   } catch (error) {
     console.log(error);
@@ -213,4 +209,21 @@ async function findUserInGuildByName(guild: Guild, name: string) {
     console.error(error);
   }
   return member;
+}
+
+export async function findUserNicknameInGuildById(guild: Guild, id: string) {
+  let member;
+  try {
+    const members = await guild.members.fetch();
+    member = members.find((user) => user.id === id);
+  } catch (error) {
+    console.error(error);
+  }
+  return member?.nickname;
+}
+
+export function clearChannel(channel: TextChannel, nbMessages: number) {
+  setTimeout(() => {
+    (channel as TextChannel).bulkDelete(nbMessages);
+  }, 1500);
 }
