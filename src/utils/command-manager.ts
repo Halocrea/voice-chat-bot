@@ -56,7 +56,11 @@ export async function lockChannel(
 
 export async function unlockChannel(msg: Message, channel: VoiceChannel) {
   try {
-    await channel.lockPermissions();
+    await channel.updateOverwrite(
+      msg.guild?.id!,
+      { CONNECT: true },
+      `Voice Bot: The owner (${msg.author.username}) wants to unlock the channel`
+    );
     deleteAllHistoryPermissions(msg.author.id);
     msg.channel.send('The channel is no longer locked.');
   } catch (error) {
