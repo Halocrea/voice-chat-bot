@@ -236,17 +236,6 @@ async function findUserInGuildByName(guild: Guild, name: string) {
   return member;
 }
 
-export async function findUserNicknameInGuildById(guild: Guild, id: string) {
-  let member;
-  try {
-    const members = await guild.members.fetch();
-    member = members.find((user) => user.id === id);
-  } catch (error) {
-    console.error(error);
-  }
-  return member?.nickname;
-}
-
 export function clearChannel(channel: TextChannel, nbMessages: number) {
   setTimeout(() => {
     (channel as TextChannel).bulkDelete(nbMessages);

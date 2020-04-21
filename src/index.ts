@@ -1,11 +1,6 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
-import {
-  addOwning,
-  removeOwning,
-  getOwner,
-  editOwning,
-} from './utils/owning-manager';
+import { addOwning, removeOwning, getOwner } from './utils/owning-manager';
 import {
   renameChannel,
   lockChannel,
@@ -16,7 +11,6 @@ import {
   rejectUser,
   generateHelpEmbed,
   clearChannel,
-  findUserNicknameInGuildById,
   setChannelBitrate,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
