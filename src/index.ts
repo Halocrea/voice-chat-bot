@@ -115,7 +115,7 @@ voiceChatBot.on('message', async (msg) => {
 voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
   const localGuild = getLocalGuild(newState.guild.id);
   // Create a voice channel when a user join the "creating" channel
-  if (newState.channelID === process.env.CREATING_CHANNEL_ID) {
+  if (newState.channelID === localGuild.creatingChannelId) {
     try {
       // We create the channel
       const creatorId = newState.id;
@@ -127,7 +127,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
         channelName,
         {
           type: 'voice',
-          parent: process.env.VOICE_CATEGORY_ID,
+          parent: localGuild.categoryId,
           permissionOverwrites: [
             {
               id: newState.client.user!.id,
@@ -154,7 +154,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
       const historyPermissions = getAllHistoryPermissions(creator.user.id);
       if (historyPermissions && historyPermissions.length > 0) {
         const commandsChannel = newState.guild.channels.resolve(
-          process.env.CMD_CHANNEL_ID!
+          localGuild.commandsChannelId
         ) as discord.TextChannel;
         if (commandsChannel && commandsChannel.type === 'text') {
           // We get the nickname of each potential allowed member
@@ -262,8 +262,8 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
     if (
       channelLeft &&
       !memberCount &&
-      channelLeft.parentID === process.env.VOICE_CATEGORY_ID &&
-      channelLeft.id !== process.env.CREATING_CHANNEL_ID
+      channelLeft.parentID === localGuild.categoryId &&
+      channelLeft.id !== localGuild.creatingChannelId
     ) {
       try {
         await channelLeft.lockPermissions();

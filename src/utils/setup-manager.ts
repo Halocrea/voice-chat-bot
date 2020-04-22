@@ -41,7 +41,7 @@ export function handleSetup(voiceChatBot: Client, msg: Message) {
         })
         .catch((error) => {
           setupMessage.channel.send(
-            "You didn't answer but please don't forget to set me up 😭 Use the command again."
+            `You didn't answer but please don't forget to set me up 😭 Use the command again.`
           );
           console.error(error);
         });
