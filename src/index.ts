@@ -18,6 +18,8 @@ import {
   getAllHistoryPermissions,
   deleteAllHistoryPermissions,
 } from './utils/history-permission-manager';
+import { handleSetup } from './utils/setup-manager';
+import { getLocalGuild } from './utils/local-guild-manager';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -35,54 +37,83 @@ voiceChatBot.on('message', async (msg) => {
     const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
     const cmd = cmdAndArgs.shift();
     const args = cmdAndArgs.join(' ').trim();
-    if (cmd !== 'help') {
-      const channel = msg.member?.voice.channel;
-      if (channel) {
-        const { userId } = getOwner(channel.id);
-        if (userId === msg.author.id) {
-          switch (cmd) {
-            case 'name':
-              renameChannel(msg, channel, args);
-              break;
-            case 'lock':
-              lockChannel(msg, channel, userId);
-              break;
-            case 'unlock':
-              unlockChannel(msg, channel);
-              break;
-            case 'permit':
-              permitUser(msg, channel, args);
-              break;
-            case 'reject':
-              rejectUser(msg, channel, args);
-              break;
-            case 'limit':
-              setUserChannelLimit(msg, channel, args);
-              break;
-            case 'bitrate':
-              setChannelBitrate(msg, channel, args);
-              break;
-            default:
-              msg.channel.send(
-                'Unknown command, please try again or use help command.'
-              );
-              break;
+    const localGuild = getLocalGuild(msg.guild!.id);
+    if (localGuild) {
+      if (cmd !== 'help') {
+        const channel = msg.member?.voice.channel;
+        if (channel) {
+          const { userId } = getOwner(channel.id);
+          if (userId === msg.author.id) {
+            switch (cmd) {
+              case 'name':
+                renameChannel(msg, channel, args);
+                break;
+              case 'lock':
+                lockChannel(msg, channel, userId);
+                break;
+              case 'unlock':
+                unlockChannel(msg, channel);
+                break;
+              case 'permit':
+                permitUser(msg, channel, args);
+                break;
+              case 'reject':
+                rejectUser(msg, channel, args);
+                break;
+              case 'limit':
+                setUserChannelLimit(msg, channel, args);
+                break;
+              case 'bitrate':
+                setChannelBitrate(msg, channel, args);
+                break;
+              default:
+                msg.channel.send(
+                  'Unknown command, please try again or use help command.'
+                );
+                break;
+            }
+          } else if (cmd === 'claim') {
+            claimChannel(msg, channel, userId);
+          } else {
+            msg.channel.send('You have to own this channel to run commands');
           }
-        } else if (cmd === 'claim') {
-          claimChannel(msg, channel, userId);
         } else {
-          msg.channel.send('You have to own this channel to run commands');
+          msg.channel.send(
+            'You have to be in a voice channel to run commands.'
+          );
         }
       } else {
-        msg.channel.send('You have to be in a voice channel to run commands.');
+        msg.channel.send(generateHelpEmbed(voiceChatBot));
       }
+    } else if (cmd === 'setup' && msg.member?.hasPermission('ADMINISTRATOR')) {
+      handleSetup(voiceChatBot, msg);
     } else {
-      msg.channel.send(generateHelpEmbed(voiceChatBot));
+      // The bot needs to be set up before being used
+      msg.channel.send({
+        embed: {
+          title: 'DENIED! I need to be installed before being used',
+          description:
+            'Please ask an Administrator to install me using `!voice setup` command to use me, I need some configuration ☹️',
+          color: 16711680,
+          thumbnail: {
+            url: voiceChatBot.user?.avatarURL(),
+          },
+          image: {
+            url: 'https://i.imgur.com/ZIfiTGO.gif',
+          },
+          timestamp: new Date(),
+          author: {
+            name: voiceChatBot.user?.username,
+            icon_url: voiceChatBot.user?.avatarURL(),
+          },
+        },
+      });
     }
   }
 });
 
 voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
+  const localGuild = getLocalGuild(newState.guild.id);
   // Create a voice channel when a user join the "creating" channel
   if (newState.channelID === process.env.CREATING_CHANNEL_ID) {
     try {
