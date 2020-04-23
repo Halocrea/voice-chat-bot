@@ -27,7 +27,7 @@ export function handleSetup(
         embed: {
           title: 'To set me up',
           description: `Hello 😀\nTo install me on your server, you can do it in two ways:\n\n
-          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, and a text channel where I can manage and post messages and read user commands.\n\n
+          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, and a text channel where I can manage and post messages and read user commands. You can still use manual commands to set ids up, in this case you can run \`setup-help\` to get all commands.\n\n
           **Manually** (${manual}), you will have to provide me a category **ID**, a voice channel **ID** where your users will go to create a channel and a text channel **ID** working like a commands room where I can operate freely.`,
           color: 6465260,
           thumbnail: {
@@ -79,7 +79,7 @@ export function handleSetup(
         clearSetup(localGuild, voiceChatBot, msg);
         break;
       case 'setup-help':
-        helpSetup(msg);
+        helpSetup(voiceChatBot, msg);
         break;
       default:
         msg.channel.send({
@@ -144,7 +144,7 @@ function manualSetup(voiceChatBot: Client, setupMessage: Message) {
   setupMessage.channel.send({
     embed: {
       title: `Step 1: The Category`,
-      description: `Please provide me a category **ID** so I can install the permissions I need on the category.\n
+      description: `Please provide me a category **ID** so I can operate inside freely.\n
       Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
       Basically, I need those permissions on the category:
       - Manage channels
@@ -249,8 +249,49 @@ function clearSetup(
   });
 }
 
-function helpSetup(msg: Message) {
-  msg.channel.send('Mfpffmfmffmffpff Tepec Mffmffpfmfffppf');
+function helpSetup(voiceChatBot: Client, msg: Message) {
+  msg.channel.send({
+    embed: {
+      title: `Setup commands available`,
+      description: `Here are all the setup commands you can run as an Administrator:\n
+      **setup-category <category_id>**
+      It provides me a category **ID** so I can operate inside freely.\n
+      Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
+      Basically, I need those permissions on the category:
+      - Manage channels
+      - Manage permissions
+      - View channels
+      - Send messages
+      - Manage messages
+      - Connect
+      - Move members\n
+
+      **setup-voice <creating_voice_channel_id>**
+      It provides me the voice channel ID living inside the voice category.\n
+      Basically, when someone will join this channel, I will create a new voice channel and move him inside it.\n
+
+      **setup-commands <commands_channel_id>**
+      It provides me an id of a text channel where you will most likely send all the commands you want to use.\n
+      This text channel doesn't need to be in the voice category, but I need to have access to it and to be able to manage and post messages.\n
+
+      **setup-clear**
+      When you run this command, you delete all the ids I stored for your server. After running it, you can run \`!voice setup\` to set ids up again.
+      `,
+      image: {
+        url:
+          'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
+      },
+      color: 6465260,
+      thumbnail: {
+        url: voiceChatBot.user?.avatarURL(),
+      },
+      timestamp: new Date(),
+      author: {
+        name: voiceChatBot.user?.username,
+        icon_url: voiceChatBot.user?.avatarURL(),
+      },
+    },
+  });
 }
 
 function sendEmbedSetupCompleted(voiceChatBot: Client, msg: Message) {
