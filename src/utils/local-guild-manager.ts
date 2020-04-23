@@ -33,7 +33,7 @@ export function addLocalGuildId(guildId: string) {
 export function editCategoryId(guildId: string, categoryId: string) {
   const updateCategoryId =
     'UPDATE Local_guilds SET categoryId = ? WHERE guildId = ?';
-  db.prepare(updateCategoryId).run([guildId, categoryId]);
+  db.prepare(updateCategoryId).run([categoryId, guildId]);
 }
 
 export function editCreatingChannelId(
@@ -42,7 +42,7 @@ export function editCreatingChannelId(
 ) {
   const updateCreatingChannelId =
     'UPDATE Local_guilds SET creatingChannelId = ? WHERE guildId = ?';
-  db.prepare(updateCreatingChannelId).run([guildId, creatingChannelId]);
+  db.prepare(updateCreatingChannelId).run([creatingChannelId, guildId]);
 }
 
 export function editCommandsChannelId(
@@ -51,5 +51,10 @@ export function editCommandsChannelId(
 ) {
   const updateCommandsChannelId =
     'UPDATE Local_guilds SET commandsChannelId = ? WHERE guildId = ?';
-  db.prepare(updateCommandsChannelId).run([guildId, commandsChannelId]);
+  db.prepare(updateCommandsChannelId).run([commandsChannelId, guildId]);
+}
+
+export function removeLocalGuild(guildId: string) {
+  const deleteLocalGuild = 'DELETE FROM Local_guilds WHERE guildId = ?';
+  db.prepare(deleteLocalGuild).run(guildId);
 }

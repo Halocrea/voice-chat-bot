@@ -1,51 +1,99 @@
 import { Message, Client, OverwriteResolvable } from 'discord.js';
-import { addLocalGuild } from './local-guild-manager';
+import {
+  addLocalGuild,
+  addLocalGuildId,
+  getLocalGuild,
+  editCategoryId,
+  removeLocalGuild,
+  editCreatingChannelId,
+  editCommandsChannelId,
+} from './local-guild-manager';
+import { LocalGuild } from '../models/local-guild.model';
 
-export function handleSetup(voiceChatBot: Client, msg: Message) {
+export function handleSetup(
+  voiceChatBot: Client,
+  msg: Message,
+  cmd: string,
+  args: string
+) {
+  const localGuild = getLocalGuild(msg.guild!.id);
   const auto = '🤖';
   const manual = '✍️';
-  msg.channel
-    .send({
-      embed: {
-        title: 'To set me up',
-        description: `Hello 😀\nTo install me on your server, you can do it in two ways:\n\n
-        **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, and a text channel where I can manage and post messages and read user commands.\n\n
-        **Manually** (${manual}), you will have to provide me a category **ID**, a voice channel **ID** where your users will go to create a channel and a text channel **ID** working like a commands room where I can operate freely.`,
-        color: 6465260,
-        thumbnail: {
-          url: voiceChatBot.user?.avatarURL(),
+
+  // If we don't have a local guild, it means that the user is trying to set the bot up for the first time
+  if (!localGuild) {
+    msg.channel
+      .send({
+        embed: {
+          title: 'To set me up',
+          description: `Hello 😀\nTo install me on your server, you can do it in two ways:\n\n
+          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, and a text channel where I can manage and post messages and read user commands.\n\n
+          **Manually** (${manual}), you will have to provide me a category **ID**, a voice channel **ID** where your users will go to create a channel and a text channel **ID** working like a commands room where I can operate freely.`,
+          color: 6465260,
+          thumbnail: {
+            url: voiceChatBot.user?.avatarURL(),
+          },
         },
-      },
-    })
-    .then((setupMessage) => {
-      setupMessage.react(auto);
-      setupMessage.react(manual);
-      setupMessage
-        .awaitReactions(
-          (reaction, user) =>
-            [auto, manual].includes(reaction.emoji.name) &&
-            user.id === msg.author.id,
-          {
-            max: 1,
-            time: 2 * 60000,
-            errors: ['time'],
-          }
-        )
-        .then((collected) => {
-          const reaction = collected.first();
-          if (reaction?.emoji.name === auto) {
-            autoSetup(voiceChatBot, setupMessage);
-          } else {
-            manualSetup();
-          }
-        })
-        .catch((error) => {
-          setupMessage.channel.send(
-            `You didn't answer but please don't forget to set me up 😭 Use the command again.`
-          );
-          console.error(error);
+      })
+      .then((setupMessage) => {
+        setupMessage.react(auto);
+        setupMessage.react(manual);
+        setupMessage
+          .awaitReactions(
+            (reaction, user) =>
+              [auto, manual].includes(reaction.emoji.name) &&
+              user.id === msg.author.id,
+            {
+              max: 1,
+              time: 2 * 60000,
+              errors: ['time'],
+            }
+          )
+          .then((collected) => {
+            const reaction = collected.first();
+            if (reaction?.emoji.name === auto) {
+              autoSetup(voiceChatBot, setupMessage);
+            } else {
+              manualSetup(voiceChatBot, setupMessage);
+            }
+          })
+          .catch((error) => {
+            setupMessage.channel.send(
+              `You didn't answer but please don't forget to set me up 😭 Use the command again.`
+            );
+            console.error(error);
+          });
+      });
+  } else {
+    switch (cmd) {
+      case 'setup-category':
+        setupCategory(localGuild, voiceChatBot, msg, args);
+        break;
+      case 'setup-voice':
+        setupVoice(localGuild, voiceChatBot, msg, args);
+        break;
+      case 'setup-commands':
+        setupCommands(localGuild, voiceChatBot, msg, args);
+        break;
+      case 'setup-clear':
+        clearSetup(localGuild, voiceChatBot, msg);
+        break;
+      case 'setup-help':
+        helpSetup(msg);
+        break;
+      default:
+        msg.channel.send({
+          embed: {
+            title: `It looks like I'm already set up on your server`,
+            description: `If you want to modify my setup, please use the command \`help-setup\` to get the setup commands.`,
+            color: 6465260,
+            thumbnail: {
+              url: voiceChatBot.user?.avatarURL(),
+            },
+          },
         });
-    });
+    }
+  }
 }
 
 async function autoSetup(voiceChatBot: Client, setupMessage: Message) {
@@ -84,31 +132,146 @@ async function autoSetup(voiceChatBot: Client, setupMessage: Message) {
       creatingChannelId: voiceChannel!.id,
       commandsChannelId: textChannel!.id,
     });
-    setupMessage.channel.send({
-      embed: {
-        title: `I'm correctly set up 💕`,
-        description: `Everyone can use me now, feel free to join your creating channel to create a new channel and start chatting 💬 Have a good time guys !
-        \n\nP.S: Please, be careful about my permissions if you want to modify them.`,
-        color: 8781568,
-        image: {
-          url: 'https://i.imgur.com/z6PuA75.gif',
-        },
-        timestamp: new Date(),
-        author: {
-          name: voiceChatBot.user?.username,
-          icon_url: voiceChatBot.user?.avatarURL(),
-        },
-        thumbnail: {
-          url: voiceChatBot.user?.avatarURL(),
-        },
-      },
-    });
+    sendEmbedSetupCompleted(voiceChatBot, setupMessage);
   } catch (error) {
     setupMessage.channel.send('Error using the auto setup, please try again.');
     console.error(error);
   }
 }
 
-function manualSetup() {
-  console.log('Oui.');
+function manualSetup(voiceChatBot: Client, setupMessage: Message) {
+  addLocalGuildId(setupMessage.guild!.id);
+  setupMessage.channel.send({
+    embed: {
+      title: `Step 1: The Category`,
+      description: `Please provide me a category **ID** so I can install the permissions I need on the category.\n
+      Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
+      Basically, I need those permissions on the category:
+      - Manage channels
+      - Manage permissions
+      - View channels
+      - Send messages
+      - Manage messages
+      - Connect
+      - Move members\n
+      Please use \`!voice setup-category <category_id>\` to give me that category id.`,
+      color: 16098851,
+      thumbnail: {
+        url: voiceChatBot.user?.avatarURL(),
+      },
+    },
+  });
+}
+
+function setupCategory(
+  localGuild: LocalGuild,
+  voiceChatBot: Client,
+  msg: Message,
+  args: string
+) {
+  const initialized = !!localGuild.categoryId;
+  editCategoryId(localGuild.guildId, args);
+  if (!initialized) {
+    msg.channel.send({
+      embed: {
+        title: `Step 2: The Creating channel`,
+        description: `Alright! Now that you have set up the category, I need the voice channel ID living inside the category you previously gave me.\n
+          Basically, when someone will join this channel, I will create a new voice channel and move him inside it.\n
+          Please use \`!voice setup-voice <voice_id>\` to give me that creating voice channel id.`,
+        color: 16312092,
+        thumbnail: {
+          url: voiceChatBot.user?.avatarURL(),
+        },
+      },
+    });
+  } else {
+    msg.channel.send('Category successfully set! 👍');
+  }
+}
+
+function setupVoice(
+  localGuild: LocalGuild,
+  voiceChatBot: Client,
+  msg: Message,
+  args: string
+) {
+  const initialized = !!localGuild.creatingChannelId;
+  editCreatingChannelId(localGuild.guildId, args);
+  if (!initialized) {
+    msg.channel.send({
+      embed: {
+        title: `Step 3: The Commands channel`,
+        description: `I'm almost ready!\n
+        Now I need you to give me an id of a text channel where you will most likely send all the commands you want to use.\n
+        This text channel doesn't need to be in the voice category, but I need to have access to it and to be able to manage and post messages.\n
+        Please use \`!voice setup-commands <commands_id>\` to give the commands channel id.`,
+        color: 12118406,
+        thumbnail: {
+          url: voiceChatBot.user?.avatarURL(),
+        },
+      },
+    });
+  } else {
+    msg.channel.send('Creating voice channel set! 👍');
+  }
+}
+
+function setupCommands(
+  localGuild: LocalGuild,
+  voiceChatBot: Client,
+  msg: Message,
+  args: string
+) {
+  const initialized = !!localGuild.commandsChannelId;
+  editCommandsChannelId(localGuild.guildId, args);
+  if (!initialized) {
+    sendEmbedSetupCompleted(voiceChatBot, msg);
+  } else {
+    msg.channel.send('Commands channel set! 👍');
+  }
+}
+
+function clearSetup(
+  localGuild: LocalGuild,
+  voiceChatBot: Client,
+  msg: Message
+) {
+  removeLocalGuild(localGuild.guildId);
+  msg.channel.send({
+    embed: {
+      title: `Setup correctly cleared!`,
+      description: `You successfully cleared your server ids! Now, you can use the setup command again or use \`setup-help\` to get setup commands and drive this on your own.`,
+      color: 8781568,
+      thumbnail: {
+        url: voiceChatBot.user?.avatarURL(),
+      },
+    },
+  });
+}
+
+function helpSetup(msg: Message) {
+  msg.channel.send('Mfpffmfmffmffpff Tepec Mffmffpfmfffppf');
+}
+
+function sendEmbedSetupCompleted(voiceChatBot: Client, msg: Message) {
+  msg.channel.send({
+    embed: {
+      title: `I'm correctly set up 💕`,
+      description: `Everyone can use me now, feel free to join your creating channel to create a new channel and start chatting 💬 Have a good time guys !\n
+        If you need to modify my setup, use the command \`setup-help\` to get the commands that will help you update my setup.\n\n
+        P.S: Please, be careful about my permissions if you want to modify them.`,
+      color: 8781568,
+      image: {
+        url: 'https://i.imgur.com/z6PuA75.gif',
+      },
+      timestamp: new Date(),
+      author: {
+        name: voiceChatBot.user?.username,
+        icon_url: voiceChatBot.user?.avatarURL(),
+      },
+      thumbnail: {
+        url: voiceChatBot.user?.avatarURL(),
+      },
+    },
+  });
 }

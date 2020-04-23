@@ -38,7 +38,9 @@ voiceChatBot.on('message', async (msg) => {
     const cmd = cmdAndArgs.shift();
     const args = cmdAndArgs.join(' ').trim();
     const localGuild = getLocalGuild(msg.guild!.id);
-    if (localGuild) {
+    if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
+      handleSetup(voiceChatBot, msg, cmd, args);
+    } else if (localGuild) {
       if (cmd !== 'help') {
         const channel = msg.member?.voice.channel;
         if (channel) {
@@ -85,8 +87,6 @@ voiceChatBot.on('message', async (msg) => {
       } else {
         msg.channel.send(generateHelpEmbed(voiceChatBot));
       }
-    } else if (cmd === 'setup' && msg.member?.hasPermission('ADMINISTRATOR')) {
-      handleSetup(voiceChatBot, msg);
     } else {
       // The bot needs to be set up before being used
       msg.channel.send({
