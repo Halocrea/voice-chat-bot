@@ -1,4 +1,11 @@
-import { Message, VoiceChannel, Client, Guild, TextChannel } from 'discord.js';
+import {
+  Message,
+  VoiceChannel,
+  Client,
+  Guild,
+  TextChannel,
+  GuildMember,
+} from 'discord.js';
 import { editOwning } from './owning-manager';
 import {
   getChannelName,
@@ -78,20 +85,35 @@ export async function permitUser(
   try {
     const allowed =
       msg.mentions.members?.first() ??
+      msg.mentions.roles.first() ??
       (await findUserInGuildByName(msg.guild!, args));
     if (allowed) {
-      await channel.updateOverwrite(
-        allowed,
-        { CONNECT: true },
-        `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
-      );
-      addHistoryPermission({
-        userId: msg.author.id,
-        permittedUserId: allowed.user.id,
-      });
-      msg.channel.send(`${allowed.user.username} is now permitted!`);
+      // So now we need to check if the owner sent a member or a role
+      if (allowed instanceof GuildMember) {
+        await channel.updateOverwrite(
+          allowed,
+          { CONNECT: true },
+          `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
+        );
+        addHistoryPermission({
+          userId: msg.author.id,
+          permittedUserId: allowed.user.id,
+        });
+        msg.channel.send(`${allowed.user.username} is now permitted!`);
+      } else {
+        await channel.updateOverwrite(
+          allowed,
+          { CONNECT: true },
+          `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.name}) in his channel`
+        );
+        addHistoryPermission({
+          userId: msg.author.id,
+          permittedUserId: allowed.id,
+        });
+        msg.channel.send(`@${allowed.name} members are now permitted!`);
+      }
     } else {
-      msg.channel.send('User not found, please try again.');
+      msg.channel.send('User or role not found, please try again.');
     }
   } catch (error) {
     console.error(error);

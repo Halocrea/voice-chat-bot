@@ -163,17 +163,30 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
         ) as discord.TextChannel;
         if (commandsChannel && commandsChannel.type === 'text') {
           // We get the nickname of each potential allowed member
-          let allowedMembers = '';
+          let allowedMembersAndRoles = '';
           try {
             const allowedIdsList = historyPermissions.map(
               (perm) => perm.permittedUserId
             );
+
+            // We get all concerned members
             const members = await newState.guild.members.fetch({
               user: allowedIdsList,
             });
-            allowedMembers = members
-              .map((user) => user.nickname ?? user.user.username)
-              .join('\n');
+            const allowedMembers =
+              members.array().length > 0
+                ? members.map((user) => user.nickname ?? user.user.username)
+                : [];
+
+            // We get all concerned roled
+            const allowedRoles = newState.guild.roles.cache
+              .filter((role) => allowedIdsList.includes(role.id))
+              .map((role) => role.name);
+
+            // We group everyone
+            allowedMembersAndRoles = [...allowedMembers, ...allowedRoles].join(
+              '\n'
+            );
           } catch (error) {
             console.error(error);
           }
@@ -183,7 +196,7 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
               embed: {
                 title:
                   'Do you want to lock your channel and load your last permissions?',
-                description: `Those members would be allowed:\n\n${allowedMembers}`,
+                description: `Those members/roles would be allowed:\n\n${allowedMembersAndRoles}`,
                 color: 7944435,
                 timestamp: new Date(),
               },
