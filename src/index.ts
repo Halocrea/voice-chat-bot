@@ -68,6 +68,11 @@ voiceChatBot.on('message', async (msg) => {
               case 'bitrate':
                 setChannelBitrate(msg, channel, args);
                 break;
+              case 'claim':
+                msg.channel.send(
+                  'You already are the owner of this channel 🤔'
+                );
+                break;
               default:
                 msg.channel.send(
                   'Unknown command, please try again or use help command.'

@@ -28,7 +28,7 @@ export function editHistoryName(historyName: HistoryName) {
     'UPDATE History_names SET channelName = ? WHERE userId = ?';
   db.prepare(updateHistoryName).run([
     historyName.channelName,
-    historyName.channelName,
+    historyName.userId,
   ]);
 }
 

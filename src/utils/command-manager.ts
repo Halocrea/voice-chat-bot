@@ -30,7 +30,9 @@ export async function renameChannel(
       { name: args },
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
-    msg.channel.send('The channel has been correctly renamed!');
+    msg.channel.send(
+      `The channel has been correctly renamed into ${args}, ${msg.author.username}!`
+    );
   } catch (error) {
     console.error(error);
   }
