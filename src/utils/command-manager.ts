@@ -271,12 +271,12 @@ export function handleErrors(msg: Message, error: DiscordAPIError) {
   switch (error.code) {
     case 50001:
       msg.channel.send(
-        "Oops! It seems like I'm missing access to perform this action. Please make sure I'm not missing accesses on channels."
+        `Oops! It seems like I'm missing access to perform this action. Please make sure I'm not missing accesses on channels.`
       );
       break;
     case 50013:
       msg.channel.send(
-        "Oops! It seems like I'm missing permissions to perform this action. Please make sure I'm not missing permissions on channels."
+        `Oops! It seems like I'm missing permissions to perform this action. Please make sure I'm not missing permissions on channels.`
       );
       break;
     default:
