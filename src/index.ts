@@ -249,7 +249,9 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
                       ],
                     });
                     newChannel.edit({ permissionOverwrites: permissions });
-                    clearChannel(commandsChannel, 1);
+                    setTimeout(() => {
+                      msg.delete();
+                    }, 1500);
                   } else {
                     // We clear his history
                     deleteAllHistoryPermissions(creatorId);

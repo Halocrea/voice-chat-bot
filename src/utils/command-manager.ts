@@ -5,6 +5,7 @@ import {
   Guild,
   TextChannel,
   GuildMember,
+  DiscordAPIError,
 } from 'discord.js';
 import { editOwning } from './owning-manager';
 import {
@@ -41,7 +42,7 @@ export async function renameChannel(
       `The channel has been correctly renamed into ${args}, ${msg.author.username}!`
     );
   } catch (error) {
-    console.error(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -59,7 +60,7 @@ export async function lockChannel(
     await channel.updateOverwrite(userId, { CONNECT: true });
     msg.channel.send('The channel is now locked.');
   } catch (error) {
-    console.error(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -73,7 +74,7 @@ export async function unlockChannel(msg: Message, channel: VoiceChannel) {
     deleteAllHistoryPermissions(msg.author.id);
     msg.channel.send('The channel is no longer locked.');
   } catch (error) {
-    console.error(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -116,7 +117,7 @@ export async function permitUser(
       msg.channel.send('User or role not found, please try again.');
     }
   } catch (error) {
-    console.error(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -145,7 +146,7 @@ export async function rejectUser(
       clearChannel(msg.channel as TextChannel, 2);
     }
   } catch (error) {
-    console.log(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -161,7 +162,7 @@ export async function setUserChannelLimit(
     );
     msg.channel.send('The user limit has correctly been set!');
   } catch (error) {
-    console.error(error);
+    handleErrors(msg, error);
   }
 }
 
@@ -193,7 +194,7 @@ export async function setChannelBitrate(
     try {
       await channel.setBitrate(bitrate);
     } catch (error) {
-      console.error(error);
+      handleErrors(msg, error);
     }
   } else {
     msg.channel.send('Please give a number between 8kbps and 96kbps.');
@@ -264,4 +265,25 @@ export function clearChannel(channel: TextChannel, nbMessages: number) {
   setTimeout(() => {
     (channel as TextChannel).bulkDelete(nbMessages);
   }, 1500);
+}
+
+export function handleErrors(msg: Message, error: DiscordAPIError) {
+  switch (error.code) {
+    case 50001:
+      msg.channel.send(
+        "Oops! It seems like I'm missing access to perform this action. Please make sure I'm not missing accesses on channels."
+      );
+      break;
+    case 50013:
+      msg.channel.send(
+        "Oops! It seems like I'm missing permissions to perform this action. Please make sure I'm not missing permissions on channels."
+      );
+      break;
+    default:
+      msg.channel.send(
+        'Hmm... something went wrong... Please try again or check I correctly have everything I need.'
+      );
+      break;
+  }
+  console.error(error);
 }
