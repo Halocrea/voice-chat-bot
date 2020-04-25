@@ -39,7 +39,7 @@ export async function renameChannel(
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
     msg.channel.send(
-      `The channel has been correctly renamed into ${args}, ${msg.author.username}!`
+      `ℹ️ The channel has been renamed into **${args}**, ${msg.author.username}!`
     );
   } catch (error) {
     handleErrors(msg, error);
@@ -58,7 +58,7 @@ export async function lockChannel(
       `Voice Bot: The owner (${msg.author.username}) wants to lock the channel`
     );
     await channel.updateOverwrite(userId, { CONNECT: true });
-    msg.channel.send('The channel is now locked.');
+    msg.channel.send('🔒 The channel is now **locked**');
   } catch (error) {
     handleErrors(msg, error);
   }
@@ -72,7 +72,7 @@ export async function unlockChannel(msg: Message, channel: VoiceChannel) {
       `Voice Bot: The owner (${msg.author.username}) wants to unlock the channel`
     );
     deleteAllHistoryPermissions(msg.author.id);
-    msg.channel.send('The channel is no longer locked.');
+    msg.channel.send('🔓 Channel **unlocked**');
   } catch (error) {
     handleErrors(msg, error);
   }
@@ -100,7 +100,7 @@ export async function permitUser(
           userId: msg.author.id,
           permittedUserId: allowed.user.id,
         });
-        msg.channel.send(`${allowed.user.username} is now permitted!`);
+        msg.channel.send(`✅ **${allowed.user.username}** is now permitted!`);
       } else {
         await channel.updateOverwrite(
           allowed,
@@ -111,7 +111,7 @@ export async function permitUser(
           userId: msg.author.id,
           permittedUserId: allowed.id,
         });
-        msg.channel.send(`@${allowed.name} members are now permitted!`);
+        msg.channel.send(`✅ **@${allowed.name}** members are now permitted!`);
       }
     } else {
       msg.channel.send('User or role not found, please try again.');
@@ -139,7 +139,7 @@ export async function rejectUser(
         { CONNECT: false },
         `Kicked user (${rejected.user.username}) locked out of the channel`
       );
-      msg.channel.send(`${rejected.user.username} has been kicked!`);
+      msg.channel.send(`💢 **${rejected.user.username}** has been kicked!`);
       clearChannel(msg.channel as TextChannel, 2);
     } else {
       msg.channel.send('User not found, please try again.');
@@ -160,7 +160,7 @@ export async function setUserChannelLimit(
       +args,
       `Voice Bot: Asked by his owner (${msg.author.username})`
     );
-    msg.channel.send('The user limit has correctly been set!');
+    msg.channel.send(`✋ User limit set to **${args}**`);
   } catch (error) {
     handleErrors(msg, error);
   }
@@ -178,7 +178,7 @@ export async function claimChannel(
       ownedChannelId: channel.id,
       userId: msg.author.id,
     });
-    msg.channel.send('You are now the owner of the channel!');
+    msg.channel.send('💪 You are now the **owner** of the channel!');
   } else {
     msg.channel.send(`You can't own this channel right now.`);
   }
@@ -193,6 +193,7 @@ export async function setChannelBitrate(
   if (bitrate >= 8 && bitrate <= 96) {
     try {
       await channel.setBitrate(bitrate);
+      msg.channel.send(`👂 Channel bitrate set to **${args}kbps**`);
     } catch (error) {
       handleErrors(msg, error);
     }
@@ -201,48 +202,46 @@ export async function setChannelBitrate(
   }
 }
 
-export function generateHelpEmbed(client: Client) {
+export function generateHelpEmbed(voiceChatBot: Client) {
   return {
     embed: {
       author: {
-        name: client.user?.username,
-        icon_url: client.user?.avatarURL(),
+        name: voiceChatBot.user?.username,
+        icon_url: voiceChatBot.user?.avatarURL(),
       },
-      title: 'Help',
-      description: 'Commands list',
-      fields: [
-        {
-          name: 'name your_channel_name',
-          value: 'Allows you to rename your channel',
-        },
-        {
-          name: 'lock',
-          value: 'Allows you to lock your channel, nobody can join it',
-        },
-        {
-          name: 'permit @someone/username',
-          value: 'Allows a user to enter your locked channel',
-        },
-        {
-          name: 'unlock',
-          value: 'Unlocks your channel to everyone',
-        },
-        {
-          name: 'reject @someone/username',
-          value: 'Kicks a user out of your channel',
-        },
-        {
-          name: 'limit <number>',
-          value: 'Sets a user limit to your channel',
-        },
-        {
-          name: 'bitrate <number>',
-          value: 'Sets the channel bitrate',
-        },
-      ],
+      title: 'Commands list',
+      description: `Here are all the commands you can run:\n
+      **name <channel_name>**
+      Allow you to rename your channel\n
+
+      **lock**
+      Allow you to lock your channel, nobody can join it\n
+
+      **permit <@someone/@role/username>**
+      Allow a user or role members provided to enter your locked channel\n
+
+      **unlock**
+      Open your locked channel to everyone\n
+
+      **reject <@someone/username>**
+      Kick a user out of your channel\n
+
+      **claim**
+      Allow anyone to get the own of the channel after his previous owner left\n
+
+      **limit <number>**
+      Set a user limit to your channel\n
+
+      **bitrate <number>**
+      Set the channel bitrate`,
       timestamp: new Date(),
-      footer: {
-        icon_url: client.user?.avatarURL(),
+      image: {
+        url:
+          'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
+      },
+      color: 6465260,
+      thumbnail: {
+        url: voiceChatBot.user?.avatarURL(),
       },
     },
   };
