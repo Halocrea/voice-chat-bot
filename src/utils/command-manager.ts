@@ -190,15 +190,15 @@ export async function setChannelBitrate(
   args: string
 ) {
   const bitrate = +args;
-  if (bitrate >= 8 && bitrate <= 96) {
+  if (bitrate >= 8000 && bitrate <= 96000) {
     try {
       await channel.setBitrate(bitrate);
-      msg.channel.send(`👂 Channel bitrate set to **${args}kbps**`);
+      msg.channel.send(`👂 Channel bitrate set to **${args}bps**`);
     } catch (error) {
       handleErrors(msg, error);
     }
   } else {
-    msg.channel.send('Please give a number between 8kbps and 96kbps.');
+    msg.channel.send('Please give a number between 8000bps and 96000bps.');
   }
 }
 
