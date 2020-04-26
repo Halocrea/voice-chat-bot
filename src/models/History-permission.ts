@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { HistoryPermission } from '../types/history-permission.interface';
 
 const db = new Database(
   path.join(__dirname, '../../saves/history_permission.db'),
@@ -14,6 +13,11 @@ const createHistoryPermissions = `CREATE TABLE IF NOT EXISTS History_permissions
   permittedUserId VARCHAR(30) NOT NULL
 );`;
 db.exec(createHistoryPermissions);
+
+export interface HistoryPermission {
+  userId: string;
+  permittedUserId: string;
+}
 
 export function getAllHistoryPermissions(
   userId: string

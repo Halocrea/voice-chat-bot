@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { LocalGuild } from '../types/local-guild.interface';
 
 const db = new Database(path.join(__dirname, '../../saves/local_guild.db'), {
   verbose: console.log,
@@ -14,6 +13,14 @@ const localGuilds = `CREATE TABLE IF NOT EXISTS Local_guilds (
   commandsChannelId VARCHAR(30)
 );`;
 db.exec(localGuilds);
+
+export interface LocalGuild {
+  guildId: string;
+  prefix: string;
+  categoryId: string;
+  creatingChannelId: string;
+  commandsChannelId: string;
+}
 
 export function getLocalGuild(guildId: string): LocalGuild {
   const localGuild = 'SELECT * FROM Local_guilds WHERE guildId = ?';

@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { Historic } from '../types/historic.interface';
 
 const db = new Database(path.join(__dirname, '../../saves/historic.db'), {
   verbose: console.log,
@@ -12,6 +11,12 @@ const createHistoric = `CREATE TABLE IF NOT EXISTS Historic (
   userLimit TINYINT(2)
 );`;
 db.exec(createHistoric);
+
+export interface Historic {
+  userId: string;
+  channelName?: string;
+  userLimit?: number;
+}
 
 export function getHistoric(userId: string): Historic {
   const historic = 'SELECT * FROM Historic WHERE userId = ?';

@@ -1,4 +1,3 @@
-import { Owning } from '../types/owning.interface';
 import Database from 'better-sqlite3';
 import path from 'path';
 
@@ -11,6 +10,11 @@ const createOwnings = `CREATE TABLE IF NOT EXISTS Ownings (
   userId VARCHAR(30) NOT NULL
 );`;
 db.exec(createOwnings);
+
+export interface Owning {
+  userId: string;
+  ownedChannelId: string;
+}
 
 export function getOwner(ownedChannelId: string) {
   const owner = 'SELECT userId FROM Ownings WHERE ownedChannelId = ?';
