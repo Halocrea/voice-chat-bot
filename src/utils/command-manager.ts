@@ -309,8 +309,21 @@ export async function setChannelBitrate(
   channel: VoiceChannel,
   args: string
 ) {
+  // 96kbps is the tier 0 bitrate max
+  let bitrateMax = 96000;
+  switch (msg.guild?.premiumTier) {
+    case 1:
+      bitrateMax = 128000;
+      break;
+    case 2:
+      bitrateMax = 256000;
+      break;
+    case 3:
+      bitrateMax = 384000;
+      break;
+  }
   const bitrate = +args;
-  if (bitrate >= 8000 && bitrate <= 96000) {
+  if (bitrate >= 8000 && bitrate <= bitrateMax) {
     try {
       await channel.setBitrate(bitrate);
       msg.channel.send(`👂 Channel bitrate set to **${args}bps**`);
@@ -318,7 +331,9 @@ export async function setChannelBitrate(
       handleErrors(msg, error);
     }
   } else {
-    msg.channel.send('Please give a number between 8000bps and 96000bps.');
+    msg.channel.send(
+      `Please give a number between 8000bps and ${bitrateMax}bps.`
+    );
   }
 }
 
