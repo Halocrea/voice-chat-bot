@@ -8,6 +8,7 @@ const db = new Database(path.join(__dirname, '../../saves/local_guild.db'), {
 
 const localGuilds = `CREATE TABLE IF NOT EXISTS Local_guilds (
   guildId VARCHAR(30) PRIMARY KEY,
+  prefix VARCHAR(15),
   categoryId VARCHAR(30),
   creatingChannelId VARCHAR(30),
   commandsChannelId VARCHAR(30)
@@ -21,13 +22,18 @@ export function getLocalGuild(guildId: string): LocalGuild {
 
 export function addLocalGuild(localGuild: LocalGuild) {
   const newLocalGuild =
-    'INSERT INTO Local_guilds (guildId, categoryId, creatingChannelId, commandsChannelId) VALUES (@guildId, @categoryId, @creatingChannelId, @commandsChannelId)';
+    'INSERT INTO Local_guilds (guildId, prefix, categoryId, creatingChannelId, commandsChannelId) VALUES (@guildId, @prefix, @categoryId, @creatingChannelId, @commandsChannelId)';
   return db.prepare(newLocalGuild).run(localGuild);
 }
 
 export function addLocalGuildId(guildId: string) {
   const newLocalGuild = 'INSERT INTO Local_guilds (guildId) VALUES (@guildId)';
   db.prepare(newLocalGuild).run({ guildId });
+}
+
+export function editPrefix(guildId: string, prefix: string) {
+  const updatePrefix = 'UPDATE Local_guilds SET prefix = ? WHERE guildId = ?';
+  db.prepare(updatePrefix).run([prefix, guildId]);
 }
 
 export function editCategoryId(guildId: string, categoryId: string) {

@@ -10,7 +10,6 @@ import {
   claimChannel,
   rejectUser,
   generateHelpEmbed,
-  clearChannel,
   setChannelBitrate,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
@@ -21,19 +20,22 @@ dotenv.config();
 const voiceChatBot = new discord.Client();
 
 voiceChatBot.on('ready', () => {
-  voiceChatBot.user?.setActivity(`${process.env.CMD_VOICE} help`, {
+  voiceChatBot.user?.setActivity(`${process.env.CMD_PREFIX} help`, {
     type: 'LISTENING',
   });
 });
 
 voiceChatBot.on('message', async (msg) => {
-  const cmdVoice = process.env.CMD_VOICE;
+  const localGuild = getLocalGuild(msg.guild!.id);
+  const cmdVoice =
+    localGuild && localGuild.prefix
+      ? localGuild.prefix
+      : process.env.CMD_PREFIX;
   if (cmdVoice && msg.content.startsWith(cmdVoice)) {
     // We have to check if the user is in a channel & if he owns it
     const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
     const cmd = cmdAndArgs.shift();
     const args = cmdAndArgs.join(' ').trim();
-    const localGuild = getLocalGuild(msg.guild!.id);
     if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
       handleSetup(voiceChatBot, msg, cmd, args);
     } else if (localGuild) {

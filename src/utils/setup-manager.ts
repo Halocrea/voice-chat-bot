@@ -7,8 +7,12 @@ import {
   removeLocalGuild,
   editCreatingChannelId,
   editCommandsChannelId,
+  editPrefix,
 } from './local-guild-manager';
 import { LocalGuild } from '../models/local-guild.model';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export function handleSetup(
   voiceChatBot: Client,
@@ -27,7 +31,7 @@ export function handleSetup(
         embed: {
           title: 'To set me up',
           description: `Hello 😀\nTo install me on your server, you can do it in two ways:\n\n
-          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, and a text channel where I can manage and post messages and read user commands. You can still use manual commands to set ids up, in this case you can run \`setup-help\` to get all commands.\n\n
+          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, a text channel where I can manage and post messages and read user commands, and set \`!voice\` as a command prefix. You can still use manual commands to set ids up, in this case you can run \`setup-help\` to get all commands.\n\n
           **Manually** (${manual}), you will have to provide me a category **ID**, a voice channel **ID** where your users will go to create a channel and a text channel **ID** working like a commands room where I can operate freely.`,
           color: 6465260,
           thumbnail: {
@@ -66,6 +70,9 @@ export function handleSetup(
       });
   } else {
     switch (cmd) {
+      case 'setup-prefix':
+        setupPrefix(localGuild, voiceChatBot, msg, args);
+        break;
       case 'setup-category':
         setupCategory(localGuild, voiceChatBot, msg, args);
         break;
@@ -128,6 +135,7 @@ async function autoSetup(voiceChatBot: Client, setupMessage: Message) {
     });
     addLocalGuild({
       guildId: setupMessage.guild!.id,
+      prefix: process.env.CMD_PREFIX!,
       categoryId: category!.id,
       creatingChannelId: voiceChannel!.id,
       commandsChannelId: textChannel!.id,
@@ -143,24 +151,49 @@ function manualSetup(voiceChatBot: Client, setupMessage: Message) {
   addLocalGuildId(setupMessage.guild!.id);
   setupMessage.channel.send({
     embed: {
-      title: `Step 1: The Category`,
-      description: `Please provide me a category **ID** so I can operate inside freely.\n
-      Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
-      Basically, I need those permissions on the category:
-      - Manage channels
-      - Manage permissions
-      - View channels
-      - Send messages
-      - Manage messages
-      - Connect
-      - Move members\n
-      Please use \`!voice setup-category <category_id>\` to give me that category id.`,
-      color: 16098851,
+      title: `Step 1: The Command prefix`,
+      description: `Please provide me a command prefix that you will write to use any command. We basically set to \`!voice\` but you can set it to anything you want within 15 characters.\n
+      Please use \`!voice setup-prefix <prefix>\` to give me that command prefix.`,
+      color: 14323205,
       thumbnail: {
         url: voiceChatBot.user?.avatarURL(),
       },
     },
   });
+}
+
+function setupPrefix(
+  localGuild: LocalGuild,
+  voiceChatBot: Client,
+  msg: Message,
+  args: string
+) {
+  const initialized = !!localGuild.prefix;
+  editPrefix(localGuild.guildId, args);
+  if (!initialized) {
+    msg.channel.send({
+      embed: {
+        title: `Step 2: The Category`,
+        description: `Please provide me a category **ID** so I can operate inside freely.\n
+          Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
+          Basically, I need those permissions on the category:
+          - Manage channels
+          - Manage permissions
+          - View channels
+          - Send messages
+          - Manage messages
+          - Connect
+          - Move members\n
+          Please use \`<your_prefix> setup-category <category_id>\` to give me that category id.`,
+        color: 15968821,
+        thumbnail: {
+          url: voiceChatBot.user?.avatarURL(),
+        },
+      },
+    });
+  } else {
+    msg.channel.send('Command prefix successfully set! 👍');
+  }
 }
 
 function setupCategory(
@@ -177,7 +210,7 @@ function setupCategory(
         title: `Step 2: The Creating channel`,
         description: `Alright! Now that you have set up the category, I need the voice channel ID living inside the category you previously gave me.\n
           Basically, when someone will join this channel, I will create a new voice channel and move him inside it.\n
-          Please use \`!voice setup-voice <voice_id>\` to give me that creating voice channel id.`,
+          Please use \`<your_prefix> setup-voice <voice_id>\` to give me that creating voice channel id.`,
         color: 16312092,
         thumbnail: {
           url: voiceChatBot.user?.avatarURL(),
@@ -204,7 +237,7 @@ function setupVoice(
         description: `I'm almost ready!\n
         Now I need you to give me an id of a text channel where you will most likely send all the commands you want to use.\n
         This text channel doesn't need to be in the voice category, but I need to have access to it and to be able to manage and post messages.\n
-        Please use \`!voice setup-commands <commands_id>\` to give the commands channel id.`,
+        Please use \`<your_prefix> setup-commands <commands_id>\` to give the commands channel id.`,
         color: 12118406,
         thumbnail: {
           url: voiceChatBot.user?.avatarURL(),
@@ -240,7 +273,7 @@ function clearSetup(
   msg.channel.send({
     embed: {
       title: `Setup correctly cleared!`,
-      description: `You successfully cleared your server ids! Now, you can use the setup command again or use \`setup-help\` to get setup commands and drive this on your own.`,
+      description: `You successfully cleared your server ids! Now, you can use the setup command \`!voice setup\` again or use \`!voice setup-help\` to get setup commands and drive this on your own.`,
       color: 8781568,
       thumbnail: {
         url: voiceChatBot.user?.avatarURL(),
