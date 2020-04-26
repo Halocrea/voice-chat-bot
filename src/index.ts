@@ -9,7 +9,7 @@ dotenv.config();
 const voiceChatBot = new discord.Client();
 
 voiceChatBot.on('ready', () => {
-  voiceChatBot.user?.setActivity(`${process.env.CMD_PREFIX} help`, {
+  voiceChatBot.user?.setActivity(`Made with ❤️`, {
     type: 'LISTENING',
   });
 });
