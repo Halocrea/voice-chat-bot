@@ -467,7 +467,7 @@ function handleErrors(msg: Message, error: DiscordAPIError) {
       break;
     default:
       msg.channel.send(
-        'Hmm... something went wrong... Please try again or check I correctly have everything I need.'
+        'Hmm... something went wrong... Please try again or check that I correctly have everything I need.'
       );
       break;
   }
