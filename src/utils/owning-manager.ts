@@ -1,4 +1,4 @@
-import { Owning } from '../types/owning.model';
+import { Owning } from '../types/owning.interface';
 import Database from 'better-sqlite3';
 import path from 'path';
 

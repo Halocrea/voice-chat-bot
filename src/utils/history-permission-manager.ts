@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { HistoryPermission } from '../types/history-permission.model';
+import { HistoryPermission } from '../types/history-permission.interface';
 
 const db = new Database(
   path.join(__dirname, '../../saves/history_permission.db'),

@@ -9,7 +9,7 @@ import {
   editCommandsChannelId,
   editPrefix,
 } from './local-guild-manager';
-import { LocalGuild } from '../types/local-guild.model';
+import { LocalGuild } from '../types/local-guild.interface';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

@@ -1,7 +1,7 @@
 import { VoiceState } from 'discord.js';
 import { getLocalGuild } from './local-guild-manager';
 import { addOwning, removeOwning } from './owning-manager';
-import { LocalGuild } from '../types/local-guild.model';
+import { LocalGuild } from '../types/local-guild.interface';
 import { getHistoric } from './history-manager';
 
 export async function handleVoiceEvent(

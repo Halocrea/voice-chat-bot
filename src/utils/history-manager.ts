@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { Historic } from '../types/historic.model';
+import { Historic } from '../types/historic.interface';
 
 const db = new Database(path.join(__dirname, '../../saves/historic.db'), {
   verbose: console.log,
