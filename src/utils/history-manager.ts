@@ -30,12 +30,6 @@ export function addHistoryLimit(history: History) {
   db.prepare(newHistory).run(history);
 }
 
-// export function addUserLimit(history: History) {
-//   const newHistory =
-//     'INSERT INTO History (userId, userLimit) VALUES (@userId, @userLimit)';
-//   db.prepare(newHistory).run(history);
-// }
-
 export function editHistoryName(history: History) {
   const updateHistoryName =
     'UPDATE History SET channelName = ? WHERE userId = ?';
@@ -43,7 +37,8 @@ export function editHistoryName(history: History) {
 }
 
 export function editHistoryLimit(history: History) {
-  const updateHistoryLimit = 'UPDATE History SET userLimit = ? WHERE userId = ?';
+  const updateHistoryLimit =
+    'UPDATE History SET userLimit = ? WHERE userId = ?';
   db.prepare(updateHistoryLimit).run([history.userLimit, history.userId]);
 }
 
