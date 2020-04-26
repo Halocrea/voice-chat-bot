@@ -1,9 +1,9 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
-import { handleCommand } from './utils/command-manager';
-import { handleSetup } from './utils/setup-manager';
-import { getLocalGuild } from './utils/local-guild-manager';
-import { handleVoiceEvent } from './utils/voice-channel-manager';
+import { handleCommand } from './controllers/command';
+import { handleSetup } from './controllers/setup';
+import { getLocalGuild } from './models/Local-guild';
+import { handleVoiceEvent } from './controllers/voice-channel';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();

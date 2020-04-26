@@ -8,20 +8,20 @@ import {
   DiscordAPIError,
   OverwriteResolvable,
 } from 'discord.js';
-import { editOwning, getOwner } from './owning-manager';
+import { editOwning, getOwner } from '../models/Owning';
 import {
   addHistoryPermission,
   deleteAllHistoryPermissions,
   getAllHistoryPermissions,
-} from './history-permission-manager';
-import { getLocalGuild } from './local-guild-manager';
+} from '../models/History-permission';
+import { getLocalGuild } from '../models/Local-guild';
 import {
   getHistoric,
   editHistoricName,
   addHistoricName,
   addHistoricLimit,
   editHistoricLimit,
-} from './history-manager';
+} from '../models/Historic';
 
 export async function handleCommand(
   voiceChatBot: Client,

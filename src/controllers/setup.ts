@@ -8,7 +8,7 @@ import {
   editCreatingChannelId,
   editCommandsChannelId,
   editPrefix,
-} from './local-guild-manager';
+} from '../models/Local-guild';
 import { LocalGuild } from '../types/local-guild.interface';
 import * as dotenv from 'dotenv';
 
