@@ -1,48 +1,48 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { History } from '../models/history.model';
+import { Historic } from '../types/historic.model';
 
-const db = new Database(path.join(__dirname, '../../saves/history.db'), {
+const db = new Database(path.join(__dirname, '../../saves/historic.db'), {
   verbose: console.log,
 });
 
-const createHistory = `CREATE TABLE IF NOT EXISTS History (
+const createHistoric = `CREATE TABLE IF NOT EXISTS Historic (
   userId VARCHAR(30) PRIMARY KEY,
   channelName VARCHAR(255),
   userLimit TINYINT(2)
 );`;
-db.exec(createHistory);
+db.exec(createHistoric);
 
-export function getHistory(userId: string): History {
-  const history = 'SELECT * FROM History WHERE userId = ?';
-  return db.prepare(history).get(userId);
+export function getHistoric(userId: string): Historic {
+  const historic = 'SELECT * FROM Historic WHERE userId = ?';
+  return db.prepare(historic).get(userId);
 }
 
-export function addHistoryName(history: History) {
-  const newHistory =
-    'INSERT INTO History (userId, channelName) VALUES (@userId, @channelName)';
-  db.prepare(newHistory).run(history);
+export function addHistoricName(historic: Historic) {
+  const newHistoric =
+    'INSERT INTO Historic (userId, channelName) VALUES (@userId, @channelName)';
+  db.prepare(newHistoric).run(historic);
 }
 
-export function addHistoryLimit(history: History) {
-  const newHistory =
-    'INSERT INTO History (userId, userLimit) values (@userId, @userLimit)';
-  db.prepare(newHistory).run(history);
+export function addHistoricLimit(historic: Historic) {
+  const newHistoric =
+    'INSERT INTO Historic (userId, userLimit) values (@userId, @userLimit)';
+  db.prepare(newHistoric).run(historic);
 }
 
-export function editHistoryName(history: History) {
-  const updateHistoryName =
-    'UPDATE History SET channelName = ? WHERE userId = ?';
-  db.prepare(updateHistoryName).run([history.channelName, history.userId]);
+export function editHistoricName(historic: Historic) {
+  const updateHistoricName =
+    'UPDATE Historic SET channelName = ? WHERE userId = ?';
+  db.prepare(updateHistoricName).run([historic.channelName, historic.userId]);
 }
 
-export function editHistoryLimit(history: History) {
-  const updateHistoryLimit =
-    'UPDATE History SET userLimit = ? WHERE userId = ?';
-  db.prepare(updateHistoryLimit).run([history.userLimit, history.userId]);
+export function editHistoricLimit(historic: Historic) {
+  const updateHistoricLimit =
+    'UPDATE Historic SET userLimit = ? WHERE userId = ?';
+  db.prepare(updateHistoricLimit).run([historic.userLimit, historic.userId]);
 }
 
-export function removeHistoryName(userId: string) {
-  const deleteHistoryName = 'DELETE FROM History WHERE userId = ?';
-  db.prepare(deleteHistoryName).run(userId);
+export function removeHistoricName(userId: string) {
+  const deleteHistoricName = 'DELETE FROM Historic WHERE userId = ?';
+  db.prepare(deleteHistoricName).run(userId);
 }

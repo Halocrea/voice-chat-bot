@@ -10,18 +10,18 @@ import {
 } from 'discord.js';
 import { editOwning, getOwner } from './owning-manager';
 import {
-  editHistoryName,
-  getHistory,
-  editHistoryLimit,
-  addHistoryName,
-  addHistoryLimit,
-} from './history-manager';
-import {
   addHistoryPermission,
   deleteAllHistoryPermissions,
   getAllHistoryPermissions,
 } from './history-permission-manager';
 import { getLocalGuild } from './local-guild-manager';
+import {
+  getHistoric,
+  editHistoricName,
+  addHistoricName,
+  addHistoricLimit,
+  editHistoricLimit,
+} from './history-manager';
 
 export async function handleCommand(
   voiceChatBot: Client,
@@ -84,15 +84,15 @@ async function renameChannel(
   args: string
 ) {
   // We keep this name in DB
-  const history = getHistory(msg.author.id);
+  const history = getHistoric(msg.author.id);
   const newHistory = {
     userId: msg.author.id,
     channelName: args,
   };
   if (history) {
-    editHistoryName(newHistory);
+    editHistoricName(newHistory);
   } else {
-    addHistoryName(newHistory);
+    addHistoricName(newHistory);
   }
   try {
     await channel.edit(
@@ -326,15 +326,15 @@ async function setUserChannelLimit(
 ) {
   if (+args >= 0 && +args <= 99) {
     // We keep this user limit in DB
-    const history = getHistory(msg.author.id);
+    const history = getHistoric(msg.author.id);
     const newHistory = {
       userId: msg.author.id,
       userLimit: +args,
     };
     if (history) {
-      editHistoryLimit(newHistory);
+      editHistoricLimit(newHistory);
     } else {
-      addHistoryLimit(newHistory);
+      addHistoricLimit(newHistory);
     }
     try {
       await channel.setUserLimit(

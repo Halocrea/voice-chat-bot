@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { LocalGuild } from '../models/local-guild.model';
+import { LocalGuild } from '../types/local-guild.model';
 
 const db = new Database(path.join(__dirname, '../../saves/local_guild.db'), {
   verbose: console.log,

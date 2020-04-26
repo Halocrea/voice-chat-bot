@@ -1,8 +1,8 @@
 import { VoiceState } from 'discord.js';
 import { getLocalGuild } from './local-guild-manager';
-import { getHistory } from './history-manager';
 import { addOwning, removeOwning } from './owning-manager';
-import { LocalGuild } from '../models/local-guild.model';
+import { LocalGuild } from '../types/local-guild.model';
+import { getHistoric } from './history-manager';
 
 export async function handleVoiceEvent(
   oldState: VoiceState,
@@ -29,7 +29,7 @@ async function createVoiceChannel(
     const creatorId = newState.id;
     const creator = await newState.guild.members.fetch(creatorId);
     // We load the user history to get his previous channel name & user limit
-    const history = getHistory(creatorId);
+    const history = getHistoric(creatorId);
     const channelName =
       history?.channelName ?? `${creator.user.username}'s channel`;
 
