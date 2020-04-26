@@ -8,7 +8,7 @@ import {
   DiscordAPIError,
   OverwriteResolvable,
 } from 'discord.js';
-import { editOwning } from './owning-manager';
+import { editOwning, getOwner } from './owning-manager';
 import {
   getChannelName,
   editHistoryName,
@@ -21,7 +21,62 @@ import {
 } from './history-permission-manager';
 import { getLocalGuild } from './local-guild-manager';
 
-export async function renameChannel(
+export async function handleCommand(
+  voiceChatBot: Client,
+  msg: Message,
+  cmd: string,
+  args: string
+) {
+  if (cmd !== 'help') {
+    const channel = msg.member?.voice.channel;
+    if (channel) {
+      const { userId } = getOwner(channel.id);
+      if (userId === msg.author.id) {
+        switch (cmd) {
+          case 'name':
+            renameChannel(msg, channel, args);
+            break;
+          case 'lock':
+            lockChannel(msg, channel, userId);
+            break;
+          case 'unlock':
+            unlockChannel(msg, channel);
+            break;
+          case 'permit':
+            permitUser(msg, channel, args);
+            break;
+          case 'reject':
+            rejectUser(msg, channel, args);
+            break;
+          case 'limit':
+            setUserChannelLimit(msg, channel, args);
+            break;
+          case 'bitrate':
+            setChannelBitrate(msg, channel, args);
+            break;
+          case 'claim':
+            msg.channel.send('You already are the owner of this channel 🤔');
+            break;
+          default:
+            msg.channel.send(
+              'Unknown command, please try again or use help command.'
+            );
+            break;
+        }
+      } else if (cmd === 'claim') {
+        claimChannel(msg, channel, userId);
+      } else {
+        msg.channel.send('You have to own this channel to run commands');
+      }
+    } else {
+      msg.channel.send('You have to be in a voice channel to run commands.');
+    }
+  } else {
+    msg.channel.send(generateHelpEmbed(voiceChatBot));
+  }
+}
+
+async function renameChannel(
   msg: Message,
   channel: VoiceChannel,
   args: string
@@ -49,7 +104,7 @@ export async function renameChannel(
   }
 }
 
-export async function lockChannel(
+async function lockChannel(
   msg: Message,
   channel: VoiceChannel,
   userId: string
@@ -183,7 +238,7 @@ export async function lockChannel(
   }
 }
 
-export async function unlockChannel(msg: Message, channel: VoiceChannel) {
+async function unlockChannel(msg: Message, channel: VoiceChannel) {
   try {
     await channel.updateOverwrite(
       msg.guild?.id!,
@@ -197,11 +252,7 @@ export async function unlockChannel(msg: Message, channel: VoiceChannel) {
   }
 }
 
-export async function permitUser(
-  msg: Message,
-  channel: VoiceChannel,
-  args: string
-) {
+async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
   try {
     const allowed =
       msg.mentions.members?.first() ??
@@ -240,11 +291,7 @@ export async function permitUser(
   }
 }
 
-export async function rejectUser(
-  msg: Message,
-  channel: VoiceChannel,
-  args: string
-) {
+async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
   try {
     const rejected =
       msg.mentions.members?.first() ??
@@ -269,7 +316,7 @@ export async function rejectUser(
   }
 }
 
-export async function setUserChannelLimit(
+async function setUserChannelLimit(
   msg: Message,
   channel: VoiceChannel,
   args: string
@@ -285,7 +332,7 @@ export async function setUserChannelLimit(
   }
 }
 
-export async function claimChannel(
+async function claimChannel(
   msg: Message,
   channel: VoiceChannel,
   userId: string
@@ -303,7 +350,7 @@ export async function claimChannel(
   }
 }
 
-export async function setChannelBitrate(
+async function setChannelBitrate(
   msg: Message,
   channel: VoiceChannel,
   args: string
@@ -336,7 +383,7 @@ export async function setChannelBitrate(
   }
 }
 
-export function generateHelpEmbed(voiceChatBot: Client) {
+function generateHelpEmbed(voiceChatBot: Client) {
   return {
     embed: {
       author: {
@@ -394,13 +441,13 @@ async function findUserInGuildByName(guild: Guild, name: string) {
   return member;
 }
 
-export function clearChannel(channel: TextChannel, nbMessages: number) {
+function clearChannel(channel: TextChannel, nbMessages: number) {
   setTimeout(() => {
     (channel as TextChannel).bulkDelete(nbMessages);
   }, 1500);
 }
 
-export function handleErrors(msg: Message, error: DiscordAPIError) {
+function handleErrors(msg: Message, error: DiscordAPIError) {
   switch (error.code) {
     case 50001:
       msg.channel.send(
