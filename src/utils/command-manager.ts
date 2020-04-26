@@ -10,10 +10,12 @@ import {
 } from 'discord.js';
 import { editOwning, getOwner } from './owning-manager';
 import {
-  getChannelName,
   editHistoryName,
+  getHistory,
+  editHistoryLimit,
   addHistoryName,
-} from './history-name-manager';
+  addHistoryLimit,
+} from './history-manager';
 import {
   addHistoryPermission,
   deleteAllHistoryPermissions,
@@ -81,15 +83,16 @@ async function renameChannel(
   channel: VoiceChannel,
   args: string
 ) {
-  const historyName = getChannelName(msg.author.id);
-  const newHistoryName = {
+  // We keep this name in DB
+  const history = getHistory(msg.author.id);
+  const newHistory = {
     userId: msg.author.id,
     channelName: args,
   };
-  if (historyName) {
-    editHistoryName(newHistoryName);
+  if (history) {
+    editHistoryName(newHistory);
   } else {
-    addHistoryName(newHistoryName);
+    addHistoryName(newHistory);
   }
   try {
     await channel.edit(
@@ -322,6 +325,17 @@ async function setUserChannelLimit(
   args: string
 ) {
   if (+args >= 0 && +args <= 99) {
+    // We keep this user limit in DB
+    const history = getHistory(msg.author.id);
+    const newHistory = {
+      userId: msg.author.id,
+      userLimit: +args,
+    };
+    if (history) {
+      editHistoryLimit(newHistory);
+    } else {
+      addHistoryLimit(newHistory);
+    }
     try {
       await channel.setUserLimit(
         +args,
@@ -467,7 +481,7 @@ function handleErrors(msg: Message, error: DiscordAPIError) {
       break;
     default:
       msg.channel.send(
-        'Hmm... something went wrong... Please try again or check I correctly have everything I need.'
+        'Hmm... something went wrong... Please try again or check that I correctly have everything I need.'
       );
       break;
   }
