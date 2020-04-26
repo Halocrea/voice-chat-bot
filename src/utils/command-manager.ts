@@ -321,14 +321,20 @@ async function setUserChannelLimit(
   channel: VoiceChannel,
   args: string
 ) {
-  try {
-    await channel.setUserLimit(
-      +args,
-      `Voice Bot: Asked by his owner (${msg.author.username})`
-    );
-    msg.channel.send(`✋ User limit set to **${args}**`);
-  } catch (error) {
-    handleErrors(msg, error);
+  if (+args >= 0 && +args <= 99) {
+    try {
+      await channel.setUserLimit(
+        +args,
+        `Voice Bot: Asked by his owner (${msg.author.username})`
+      );
+      msg.channel.send(
+        `✋ User limit set to **${+args > 0 ? args : 'unlimited'}**`
+      );
+    } catch (error) {
+      handleErrors(msg, error);
+    }
+  } else {
+    msg.channel.send(`Please send a value between **0** and **99**`);
   }
 }
 
@@ -410,8 +416,8 @@ function generateHelpEmbed(voiceChatBot: Client) {
       **claim**
       Allow anyone to get the own of the channel after his previous owner left\n
 
-      **limit <number>**
-      Set a user limit to your channel\n
+      **limit <0 <= number <= 99>**
+      Set a user limit to your channel (Here 0 means **unlimited**)\n
 
       **bitrate <number>**
       Set the channel bitrate`,
