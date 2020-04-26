@@ -106,8 +106,7 @@ export async function lockChannel(
         commandsChannel
           .send({
             embed: {
-              title:
-                'Do you want to lock your channel and load your last permissions?',
+              title: 'Do you want to load your last permissions?',
               description: `Those members/roles would be allowed:\n\n${allowedMembersAndRoles}`,
               color: 7944435,
               timestamp: new Date(),
