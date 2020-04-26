@@ -14,10 +14,6 @@ import {
   setChannelBitrate,
 } from './utils/command-manager';
 import { getChannelName } from './utils/history-name-manager';
-import {
-  getAllHistoryPermissions,
-  deleteAllHistoryPermissions,
-} from './utils/history-permission-manager';
 import { handleSetup } from './utils/setup-manager';
 import { getLocalGuild } from './utils/local-guild-manager';
 
@@ -154,121 +150,6 @@ voiceChatBot.on('voiceStateUpdate', async (oldState, newState) => {
         userId: creatorId,
         ownedChannelId: newChannel.id,
       });
-
-      // We ask the user if he wants to load his last permissions
-      const historyPermissions = getAllHistoryPermissions(creator.user.id);
-      if (historyPermissions && historyPermissions.length > 0) {
-        const commandsChannel = newState.guild.channels.resolve(
-          localGuild.commandsChannelId
-        ) as discord.TextChannel;
-        if (commandsChannel && commandsChannel.type === 'text') {
-          // We get the nickname of each potential allowed member
-          let allowedMembersAndRoles = '';
-          try {
-            const allowedIdsList = historyPermissions.map(
-              (perm) => perm.permittedUserId
-            );
-
-            // We get all concerned members
-            const members = await newState.guild.members.fetch({
-              user: allowedIdsList,
-            });
-            const allowedMembers =
-              members.array().length > 0
-                ? members.map((user) => user.nickname ?? user.user.username)
-                : [];
-
-            // We get all concerned roled
-            const allowedRoles = newState.guild.roles.cache
-              .filter((role) => allowedIdsList.includes(role.id))
-              .map((role) => role.name);
-
-            // We group everyone
-            allowedMembersAndRoles = [...allowedMembers, ...allowedRoles].join(
-              '\n'
-            );
-          } catch (error) {
-            console.error(error);
-          }
-
-          commandsChannel
-            .send({
-              embed: {
-                title:
-                  'Do you want to lock your channel and load your last permissions?',
-                description: `Those members/roles would be allowed:\n\n${allowedMembersAndRoles}`,
-                color: 7944435,
-                timestamp: new Date(),
-              },
-            })
-            .then((msg) => {
-              const accept = '✅';
-              const deline = '❌';
-
-              msg.react(accept);
-              msg.react(deline);
-              msg
-                .awaitReactions(
-                  (reaction, user) =>
-                    [accept, deline].includes(reaction.emoji.name) &&
-                    user.id === creatorId,
-                  {
-                    max: 1,
-                    time: 2 * 60000,
-                    errors: ['time'],
-                  }
-                )
-                .then((collected) => {
-                  const reaction = collected.first();
-                  if (reaction?.emoji.name === accept) {
-                    // We update every allowed user
-                    const permissions: discord.OverwriteResolvable[] = historyPermissions.map(
-                      (perm) => ({
-                        id: perm.permittedUserId,
-                        allow: ['CONNECT'],
-                      })
-                    );
-                    // We add the owner
-                    permissions.push({
-                      id: creator.id,
-                      allow: ['CONNECT'],
-                    });
-                    // We deny everyone
-                    permissions.push({
-                      id: newState.guild.id,
-                      deny: ['CONNECT'],
-                    });
-                    // We add the bot
-                    permissions.push({
-                      id: newState.client.user!.id,
-                      allow: [
-                        'MANAGE_CHANNELS',
-                        'MANAGE_ROLES',
-                        'VIEW_CHANNEL',
-                        'CONNECT',
-                      ],
-                    });
-                    newChannel.edit({ permissionOverwrites: permissions });
-                    setTimeout(() => {
-                      msg.delete();
-                    }, 1500);
-                  } else {
-                    // We clear his history
-                    deleteAllHistoryPermissions(creatorId);
-                    setTimeout(() => {
-                      msg.delete();
-                    }, 1000);
-                  }
-                })
-                .catch(() => {
-                  // We clear his history
-                  deleteAllHistoryPermissions(creatorId);
-                  msg.delete();
-                });
-            })
-            .catch(console.error);
-        }
-      }
     } catch (error) {
       console.error(error);
     }

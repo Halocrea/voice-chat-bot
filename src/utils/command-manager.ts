@@ -6,6 +6,7 @@ import {
   TextChannel,
   GuildMember,
   DiscordAPIError,
+  OverwriteResolvable,
 } from 'discord.js';
 import { editOwning } from './owning-manager';
 import {
@@ -16,7 +17,9 @@ import {
 import {
   addHistoryPermission,
   deleteAllHistoryPermissions,
+  getAllHistoryPermissions,
 } from './history-permission-manager';
+import { getLocalGuild } from './local-guild-manager';
 
 export async function renameChannel(
   msg: Message,
@@ -59,6 +62,123 @@ export async function lockChannel(
     );
     await channel.updateOverwrite(userId, { CONNECT: true });
     msg.channel.send('🔒 The channel is now **locked**');
+
+    // We ask the user if he wants to load his last permissions
+    const creator = msg.author;
+    const localGuild = getLocalGuild(msg.guild!.id);
+    const historyPermissions = getAllHistoryPermissions(creator.id);
+    if (historyPermissions && historyPermissions.length > 0) {
+      const commandsChannel = msg.guild!.channels.resolve(
+        localGuild.commandsChannelId
+      ) as TextChannel;
+      if (commandsChannel && commandsChannel.type === 'text') {
+        // We get the nickname of each potential allowed member
+        let allowedMembersAndRoles = '';
+        try {
+          const allowedIdsList = historyPermissions.map(
+            (perm) => perm.permittedUserId
+          );
+
+          // We get all concerned members
+          const members = await msg.guild!.members.fetch({
+            user: allowedIdsList,
+          });
+          const allowedMembers =
+            members.array().length > 0
+              ? members.map((member) => member.user)
+              : [];
+
+          // We get all concerned roled
+          const allowedRoles = msg
+            .guild!.roles.cache.filter((role) =>
+              allowedIdsList.includes(role.id)
+            )
+            .map((role) => role);
+
+          // We group everyone
+          allowedMembersAndRoles = [...allowedMembers, ...allowedRoles].join(
+            '\n'
+          );
+        } catch (error) {
+          console.error(error);
+        }
+
+        commandsChannel
+          .send({
+            embed: {
+              title:
+                'Do you want to lock your channel and load your last permissions?',
+              description: `Those members/roles would be allowed:\n\n${allowedMembersAndRoles}`,
+              color: 7944435,
+              timestamp: new Date(),
+            },
+          })
+          .then((proposal) => {
+            const accept = '✅';
+            const deline = '❌';
+
+            proposal.react(accept);
+            proposal.react(deline);
+            proposal
+              .awaitReactions(
+                (reaction, user) =>
+                  [accept, deline].includes(reaction.emoji.name) &&
+                  user.id === creator.id,
+                {
+                  max: 1,
+                  time: 2 * 60000,
+                  errors: ['time'],
+                }
+              )
+              .then((collected) => {
+                const reaction = collected.first();
+                if (reaction?.emoji.name === accept) {
+                  // We update every allowed user
+                  const permissions: OverwriteResolvable[] = historyPermissions.map(
+                    (perm) => ({
+                      id: perm.permittedUserId,
+                      allow: ['CONNECT'],
+                    })
+                  );
+                  // We add the owner
+                  permissions.push({
+                    id: creator.id,
+                    allow: ['CONNECT'],
+                  });
+                  // We deny everyone
+                  permissions.push({
+                    id: msg.guild!.id,
+                    deny: ['CONNECT'],
+                  });
+                  // We add the bot
+                  permissions.push({
+                    id: proposal.client.user!.id,
+                    allow: [
+                      'MANAGE_CHANNELS',
+                      'MANAGE_ROLES',
+                      'VIEW_CHANNEL',
+                      'CONNECT',
+                    ],
+                  });
+                  channel.edit({ permissionOverwrites: permissions });
+                  proposal.channel.send('✅ Last permissions **loaded**');
+                  proposal.delete();
+                } else {
+                  // We clear his history
+                  deleteAllHistoryPermissions(creator.id);
+                  proposal.channel.send('❌ Last permissions **not loaded**');
+                  proposal.delete();
+                }
+              })
+              .catch(() => {
+                // We clear his history
+                deleteAllHistoryPermissions(creator.id);
+                proposal.delete();
+              });
+          })
+          .catch(console.error);
+      }
+    }
   } catch (error) {
     handleErrors(msg, error);
   }
