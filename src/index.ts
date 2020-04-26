@@ -1,8 +1,6 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
-import { addOwning, removeOwning } from './utils/owning-manager';
 import { handleCommand } from './utils/command-manager';
-import { getChannelName } from './utils/history-name-manager';
 import { handleSetup } from './utils/setup-manager';
 import { getLocalGuild } from './utils/local-guild-manager';
 import { handleVoiceEvent } from './utils/voice-channel-manager';
@@ -19,16 +17,17 @@ voiceChatBot.on('ready', () => {
 voiceChatBot.on('message', async (msg) => {
   if (!msg.guild) return;
 
+  // We get the local setup
   const localGuild = getLocalGuild(msg.guild!.id);
-  const cmdVoice =
+  const cmdPrefix =
     localGuild && localGuild.prefix
       ? localGuild.prefix
       : process.env.CMD_PREFIX;
-  if (cmdVoice && msg.content.startsWith(cmdVoice)) {
-    // We have to check if the user is in a channel & if he owns it
-    const cmdAndArgs = msg.content.replace(cmdVoice, '').trim().split(' ');
+  if (cmdPrefix && msg.content.startsWith(cmdPrefix)) {
+    const cmdAndArgs = msg.content.replace(cmdPrefix, '').trim().split(' ');
     const cmd = cmdAndArgs.shift();
     const args = cmdAndArgs.join(' ').trim();
+
     if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
       handleSetup(voiceChatBot, msg, cmd, args);
     } else if (localGuild && cmd) {
