@@ -287,6 +287,9 @@ function helpSetup(voiceChatBot: Client, msg: Message) {
     embed: {
       title: `Setup commands available`,
       description: `Here are all the setup commands you can run as an Administrator:\n
+      **setup-prefix <cmd_prefix>**
+      It provides me a command prefix that you will write to use any command. Don't forget to use it once you set it!
+
       **setup-category <category_id>**
       It provides me a category **ID** so I can operate inside freely.\n
       Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
