@@ -22,6 +22,9 @@ import {
   addHistoricLimit,
   editHistoricLimit,
 } from '../models/Historic';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export async function handleCommand(
   voiceChatBot: Client,
@@ -57,21 +60,21 @@ export async function handleCommand(
             setChannelBitrate(msg, channel, args);
             break;
           case 'claim':
-            msg.channel.send('You already are the owner of this channel 🤔');
+            msg.channel.send('You already own this channel 🤔');
             break;
           default:
             msg.channel.send(
-              'Unknown command, please try again or use help command.'
+              'Unknown command, please try again or use the help command.'
             );
             break;
         }
       } else if (cmd === 'claim') {
         claimChannel(msg, channel, userId);
       } else {
-        msg.channel.send('You have to own this channel to run commands');
+        msg.channel.send(`You do not own the channel you\'re trying to modify; if its owner left, you can claim it with \`${process.env.CMD_PREFIX} claim\`.`);
       }
     } else {
-      msg.channel.send('You have to be in a voice channel to run commands.');
+      msg.channel.send('You have to be in a voice channel to run this kind of commands.');
     }
   } else {
     msg.channel.send(generateHelpEmbed(voiceChatBot));
@@ -97,10 +100,10 @@ async function renameChannel(
   try {
     await channel.edit(
       { name: args },
-      `Voice Bot: Asked by his owner (${msg.author.username})`
+      `Voice Bot: Asked by its owner (${msg.author.username})`
     );
     msg.channel.send(
-      `ℹ️ The channel has been renamed into **${args}**, ${msg.author.username}!`
+      `ℹ️ The channel has been renamed "**${args}**", ${msg.author.username}!`
     );
   } catch (error) {
     handleErrors(msg, error);
@@ -164,8 +167,8 @@ async function lockChannel(
         commandsChannel
           .send({
             embed: {
-              title: 'Do you want to load your last permissions?',
-              description: `Those members/roles would be allowed:\n\n${allowedMembersAndRoles}`,
+              title: 'Do you want me to set the permissions just like your previous voice channel?',
+              description: `Those members/roles would be allowed to join you:\n\n${allowedMembersAndRoles}`,
               color: 7944435,
               timestamp: new Date(),
             },
@@ -267,27 +270,27 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
         await channel.updateOverwrite(
           allowed,
           { CONNECT: true },
-          `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.user.username}) in his channel`
+          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.user.username}) in their channel`
         );
         addHistoryPermission({
           userId: msg.author.id,
           permittedUserId: allowed.user.id,
         });
-        msg.channel.send(`✅ **${allowed.user.username}** is now permitted!`);
+        msg.channel.send(`✅ **${allowed.user.username}** can now join your channel!`);
       } else {
         await channel.updateOverwrite(
           allowed,
           { CONNECT: true },
-          `Voice Bot: The owner (${msg.author.username}) wants to allow a user (${allowed.name}) in his channel`
+          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.name}) in their channel`
         );
         addHistoryPermission({
           userId: msg.author.id,
           permittedUserId: allowed.id,
         });
-        msg.channel.send(`✅ **@${allowed.name}** members are now permitted!`);
+        msg.channel.send(`✅ **@${allowed.name}** members can now join your channel!`);
       }
     } else {
-      msg.channel.send('User or role not found, please try again.');
+      msg.channel.send('I could not find this user or role, please make sure you typed the name correctly and try again.');
     }
   } catch (error) {
     handleErrors(msg, error);
@@ -301,17 +304,17 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
       (await findUserInGuildByName(msg.guild!, args));
     if (rejected) {
       await rejected.voice.kick(
-        `Voice Bot: The owner (${msg.author.username}) wants to kick a user (${rejected.user.username}) in his channel`
+        `Voice Bot: The owner (${msg.author.username}) wants to kick user (${rejected.user.username}) in their channel`
       );
       channel.updateOverwrite(
         rejected,
         { CONNECT: false },
-        `Kicked user (${rejected.user.username}) locked out of the channel`
+        `Kicked user (${rejected.user.username}) out of the channel`
       );
-      msg.channel.send(`💢 **${rejected.user.username}** has been kicked!`);
+      msg.channel.send(`💢 **${rejected.user.username}** has been kicked out of the channel!`);
       clearChannel(msg.channel as TextChannel, 2);
     } else {
-      msg.channel.send('User not found, please try again.');
+      msg.channel.send('I could not find this user, please make sure you typed the name correctly and try again.');
       clearChannel(msg.channel as TextChannel, 2);
     }
   } catch (error) {
@@ -364,7 +367,7 @@ async function claimChannel(
       ownedChannelId: channel.id,
       userId: msg.author.id,
     });
-    msg.channel.send('💪 You are now the **owner** of the channel!');
+    msg.channel.send('💪 You now **own** this channel!');
   } else {
     msg.channel.send(`You can't own this channel right now.`);
   }
@@ -398,7 +401,7 @@ async function setChannelBitrate(
     }
   } else {
     msg.channel.send(
-      `Please give a number between 8000bps and ${bitrateMax}bps.`
+      `Please give a BPS value between 8000 and ${bitrateMax}.`
     );
   }
 }
@@ -411,30 +414,30 @@ function generateHelpEmbed(voiceChatBot: Client) {
         icon_url: voiceChatBot.user?.avatarURL(),
       },
       title: 'Commands list',
-      description: `Here are all the commands you can run:\n
+      description: `**Notice: ** You must own the voice channel you're currently in to perform most of these actions (except for \`claim\`). \nHere are all the commands you can use:\n
       **name <channel_name>**
-      Allow you to rename your channel\n
+      Rename your channel. \n
 
       **lock**
-      Allow you to lock your channel, nobody can join it\n
+      Lock your channel; nobody can join you unless you explicitely allow them to do so by using the \`${process.env.CMD_PREFIX} permit\` command (see hereafter). \n
 
       **permit <@someone/@role/username>**
-      Allow a user or role members provided to enter your locked channel\n
+      Allow the given user or role to join your locked channel. \n
 
       **unlock**
-      Open your locked channel to everyone\n
+      Open your locked channel to everyone. \n
 
       **reject <@someone/username>**
-      Kick a user out of your channel\n
+      Kick a user out of your channel. \n
 
       **claim**
-      Allow anyone to get the own of the channel after his previous owner left\n
+      Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.\n
 
       **limit <0 <= number <= 99>**
-      Set a user limit to your channel (Here 0 means **unlimited**)\n
+      Set a user limit to your channel (Here 0 means **unlimited**).\n
 
       **bitrate <number>**
-      Set the channel bitrate`,
+      Set the channel's bitrate.`,
       timestamp: new Date(),
       image: {
         url:
@@ -471,17 +474,17 @@ function handleErrors(msg: Message, error: DiscordAPIError) {
   switch (error.code) {
     case 50001:
       msg.channel.send(
-        `Oops! It seems like I'm missing access to perform this action. Please make sure I'm not missing accesses on channels.`
+        `Oops! It seems I'm missing some permissions to perform this action. Please make sure I am allowed to do this.`
       );
       break;
     case 50013:
       msg.channel.send(
-        `Oops! It seems like I'm missing permissions to perform this action. Please make sure I'm not missing permissions on channels.`
+        `Oops! It seems I'm missing some permissions to perform this action. Please make sure I am allowed to do this.`
       );
       break;
     default:
       msg.channel.send(
-        'Hmm... something went wrong... Please try again or check that I correctly have everything I need.'
+        'Hmm... something went wrong... Please try again or make sure I have been properly configured.'
       );
       break;
   }

@@ -38,9 +38,9 @@ voiceChatBot.on('message', async (msg) => {
       // The bot needs to be set up before being used
       msg.channel.send({
         embed: {
-          title: 'DENIED! I need to be installed before being used',
+          title: 'DENIED! Please set me up and configure me first.',
           description:
-            'Please ask an Administrator to install me using `!voice setup` command to use me, I need some configuration ☹️',
+            'Please ask an Administrator to configure me using the `!voice setup` command; I require a few additionnal info to get things to work ☹️',
           color: 16711680,
           thumbnail: {
             url: voiceChatBot.user?.avatarURL(),

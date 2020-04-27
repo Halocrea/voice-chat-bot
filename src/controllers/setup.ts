@@ -30,9 +30,9 @@ export function handleSetup(
       .send({
         embed: {
           title: 'To set me up',
-          description: `Hello 😀\nTo install me on your server, you can do it in two ways:\n\n
-          **Automatically** (${auto}), I will create a new category where I can create new channels freely, a new voice channel where the user will go to create his new channel, a text channel where I can manage and post messages and read user commands, and set \`!voice\` as a command prefix. You can still use manual commands to set ids up, in this case you can run \`setup-help\` to get all commands.\n\n
-          **Manually** (${manual}), you will have to provide me a category **ID**, a voice channel **ID** where your users will go to create a channel and a text channel **ID** working like a commands room where I can operate freely.`,
+          description: `Hello 😀\nBefore I can do things on your server, I require a bit of configuration; there are two ways to do so:\n\n
+          **Automatically** (${auto}), I'll create a new category into which I'm able to manage new voice channels on the fly. Then, I'll add into this category a permanent voice channel that'll be used by members to generate their own voice channels. I'll also add a text channel to listen to members' commands and reply to them. If you'd like me to use existing channels and category instead of creating new ones, run \`setup-help\` to get all commands.\n\n
+          **Manually** (${manual}), I'll ask you for a category **ID** and a voice channel **ID** where your users will go to create a channel, and a text channel **ID** working like a commands room where I can listen to your members' requests and reply to them freely.`,
           color: 6465260,
           thumbnail: {
             url: voiceChatBot.user?.avatarURL(),
@@ -63,7 +63,7 @@ export function handleSetup(
           })
           .catch((error) => {
             setupMessage.channel.send(
-              `You didn't answer but please don't forget to set me up 😭 Use the command again.`
+              `You didn't answer in time, but please don't forget to set me up 😭 You'll have to re-use the command again.`
             );
             console.error(error);
           });
@@ -92,7 +92,7 @@ export function handleSetup(
         msg.channel.send({
           embed: {
             title: `It looks like I'm already set up on your server`,
-            description: `If you want to modify my setup, please use the command \`help-setup\` to get the setup commands.`,
+            description: `If you want to edit my setup, please use the command \`help-setup\` to get the setup commands.`,
             color: 6465260,
             thumbnail: {
               url: voiceChatBot.user?.avatarURL(),
@@ -152,8 +152,8 @@ function manualSetup(voiceChatBot: Client, setupMessage: Message) {
   setupMessage.channel.send({
     embed: {
       title: `Step 1: The Command prefix`,
-      description: `Please provide me a command prefix that you will write to use any command. We basically set to \`!voice\` but you can set it to anything you want within 15 characters.\n
-      Please use \`!voice setup-prefix <prefix>\` to give me that command prefix.`,
+      description: `Please indicate a command prefix that I'll watch to know when someone is requesting something from me. By default, my command prefix is \`!voice\`, but you can set it to anything you want within 15 characters.\n
+      Please use \`!voice setup-prefix <prefix>\` to change my command prefix.`,
       color: 14323205,
       thumbnail: {
         url: voiceChatBot.user?.avatarURL(),
@@ -175,8 +175,8 @@ function setupPrefix(
       embed: {
         title: `Step 2: The Category`,
         description: `Please provide me a category **ID** so I can operate inside freely.\n
-          Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
-          Basically, I need those permissions on the category:
+          Keep in mind that I will create and manage channels inside this category. I will also require a permanent voice channel, that I will ask you the **ID** on the next step.\n
+          I need the following permissions on the category:
           - Manage channels
           - Manage permissions
           - View channels
@@ -207,10 +207,10 @@ function setupCategory(
   if (!initialized) {
     msg.channel.send({
       embed: {
-        title: `Step 2: The Creating channel`,
-        description: `Alright! Now that you have set up the category, I need the voice channel ID living inside the category you previously gave me.\n
-          Basically, when someone will join this channel, I will create a new voice channel and move him inside it.\n
-          Please use \`<your_prefix> setup-voice <voice_id>\` to give me that creating voice channel id.`,
+        title: `Step 2: The permanent voice channel`,
+        description: `Alright! Now that you have set up the category, I need a permanent voice channel living inside the category.\n
+          Whenever someone joins this channel, I will generate another voice channel and move them inside it.\n
+          Please use \`<your_prefix> setup-voice <voice_id>\` to let me know the ID of that voice channel.`,
         color: 16312092,
         thumbnail: {
           url: voiceChatBot.user?.avatarURL(),
@@ -235,9 +235,9 @@ function setupVoice(
       embed: {
         title: `Step 3: The Commands channel`,
         description: `I'm almost ready!\n
-        Now I need you to give me an id of a text channel where you will most likely send all the commands you want to use.\n
-        This text channel doesn't need to be in the voice category, but I need to have access to it and to be able to manage and post messages.\n
-        Please use \`<your_prefix> setup-commands <commands_id>\` to give the commands channel id.`,
+        Now I need you to give me the ID of a text channel into which I will interact with users; they'll use my commands there, and I'll reply to them there as well.\n
+        This text channel doesn't need to be into the voice category, but I must be able to read it and to send messages into it.\n
+        Please use \`<your_prefix> setup-commands <commands_id>\` to let me know the ID of this commands channel.`,
         color: 12118406,
         thumbnail: {
           url: voiceChatBot.user?.avatarURL(),
@@ -245,7 +245,7 @@ function setupVoice(
       },
     });
   } else {
-    msg.channel.send('Creating voice channel set! 👍');
+    msg.channel.send('Permanent voice channel set! 👍');
   }
 }
 
@@ -273,7 +273,7 @@ function clearSetup(
   msg.channel.send({
     embed: {
       title: `Setup correctly cleared!`,
-      description: `You successfully cleared your server ids! Now, you can use the setup command \`!voice setup\` again or use \`!voice setup-help\` to get setup commands and drive this on your own.`,
+      description: `You successfully cleared my configuration! Now, you can use the setup command \`!voice setup\` again or use \`!voice setup-help\` to get setup commands and drive this on your own.`,
       color: 8781568,
       thumbnail: {
         url: voiceChatBot.user?.avatarURL(),
@@ -285,15 +285,15 @@ function clearSetup(
 function helpSetup(voiceChatBot: Client, msg: Message) {
   msg.channel.send({
     embed: {
-      title: `Setup commands available`,
+      title: `Available Setup Commands`,
       description: `Here are all the setup commands you can run as an Administrator:\n
       **setup-prefix <cmd_prefix>**
-      It provides me a command prefix that you will write to use any command. Don't forget to use it once you set it!
+      Use this to change my command prefix. By default, you can call me by using ${process.env.CMD_PREFIX}, but this command lets you change it.
 
       **setup-category <category_id>**
-      It provides me a category **ID** so I can operate inside freely.\n
-      Keep in mind that I will create all new channels inside this category using an empty voice channel inside that I will ask you the **ID** on the next step.\n
-      Basically, I need those permissions on the category:
+      Use this to give me the category **ID** into which I will operate (create and manage voice channels).\n
+      Keep in mind that I will create and manage channels inside this category. I will also require a permanent voice channel, that I will ask you the **ID** on the next step.\n
+      I need the following permissions on the category:
       - Manage channels
       - Manage permissions
       - View channels
@@ -303,15 +303,15 @@ function helpSetup(voiceChatBot: Client, msg: Message) {
       - Move members\n
 
       **setup-voice <creating_voice_channel_id>**
-      It provides me the voice channel ID living inside the voice category.\n
-      Basically, when someone will join this channel, I will create a new voice channel and move him inside it.\n
+      Use this to let me know the permanent voice channel living inside the voice category.\n
+      Whenever someone joins this channel, I will generate another voice channel and move them inside it.\n
 
       **setup-commands <commands_channel_id>**
-      It provides me an id of a text channel where you will most likely send all the commands you want to use.\n
-      This text channel doesn't need to be in the voice category, but I need to have access to it and to be able to manage and post messages.\n
+      Use this to let me know the text channel into which I will interact with users; they'll use my commands there, and I'll reply to them there as well.\n
+      This text channel doesn't need to be into the voice category, but I must be able to read it and to send messages into it.\n
 
       **setup-clear**
-      When you run this command, you delete all the ids I stored for your server. After running it, you can run \`!voice setup\` to set ids up again.
+      When you run this command, you delete all the IDs I stored for your server. After running it, you can run \`${process.env.CMD_PREFIX} setup\` to set ids up again.
       `,
       image: {
         url:
@@ -333,10 +333,10 @@ function helpSetup(voiceChatBot: Client, msg: Message) {
 function sendEmbedSetupCompleted(voiceChatBot: Client, msg: Message) {
   msg.channel.send({
     embed: {
-      title: `I'm correctly set up 💕`,
-      description: `Everyone can use me now, feel free to join your creating channel to create a new channel and start chatting 💬 Have a good time guys !\n
-        If you need to modify my setup, use the command \`setup-help\` to get the commands that will help you update my setup.\n\n
-        P.S: Please, be careful about my permissions if you want to modify them.`,
+      title: `I'm correctly configured 💕`,
+      description: `Everyone can use me now, feel free to join the permanent voice channel to get your own channel and start chatting 💬 Have a good time buddy!\n
+        If you need to edit my setup, use the command \`setup-help\` to get the list of commands to change things up.\n\n
+        P.S: Please, be careful about my permissions if you want to edit them.`,
       color: 8781568,
       image: {
         url: 'https://i.imgur.com/z6PuA75.gif',
