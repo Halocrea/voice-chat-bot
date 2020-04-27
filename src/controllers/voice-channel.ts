@@ -3,10 +3,7 @@ import { getLocalGuild, LocalGuild } from '../models/Local-guild';
 import { addOwning, removeOwning } from '../models/Owning';
 import { getHistoric } from '../models/Historic';
 
-export async function handleVoiceEvent(
-  oldState: VoiceState,
-  newState: VoiceState
-) {
+export function handleVoiceEvent(oldState: VoiceState, newState: VoiceState) {
   const localGuild = getLocalGuild(newState.guild.id);
   // Create a voice channel when a user join the "creating" channel
   if (newState.channelID === localGuild.creatingChannelId) {

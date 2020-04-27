@@ -207,7 +207,7 @@ function setupCategory(
   if (!initialized) {
     msg.channel.send({
       embed: {
-        title: `Step 2: The permanent voice channel`,
+        title: `Step 3: The permanent voice channel`,
         description: `Alright! Now that you have set up the category, I need a permanent voice channel living inside the category.\n
           Whenever someone joins this channel, I will generate another voice channel and move them inside it.\n
           Please use \`<your_prefix> setup-voice <voice_id>\` to let me know the ID of that voice channel.`,
@@ -233,7 +233,7 @@ function setupVoice(
   if (!initialized) {
     msg.channel.send({
       embed: {
-        title: `Step 3: The Commands channel`,
+        title: `Step 4: The Commands channel`,
         description: `I'm almost ready!\n
         Now I need you to give me the ID of a text channel into which I will interact with users; they'll use my commands there, and I'll reply to them there as well.\n
         This text channel doesn't need to be into the voice category, but I must be able to read it and to send messages into it.\n
