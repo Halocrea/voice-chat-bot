@@ -9,11 +9,6 @@ import {
   OverwriteResolvable,
 } from 'discord.js';
 import { getOwner, editOwnership } from '../models/Ownership';
-import {
-  addHistoryPermission,
-  deleteAllHistoryPermissions,
-  getAllHistoryPermissions,
-} from '../models/History-permission';
 import { getGuildSetup } from '../models/GuildSetup';
 import {
   getHistoric,
@@ -23,6 +18,11 @@ import {
   editHistoricLimit,
 } from '../models/Historic';
 import * as dotenv from 'dotenv';
+import {
+  getAllHistoricPermissions,
+  deleteAllHistoricPermissions,
+  addHistoricPermission,
+} from '../models/HistoricPermission';
 
 dotenv.config();
 
@@ -91,15 +91,15 @@ async function renameChannel(
   args: string
 ) {
   // We keep this name in DB
-  const history = getHistoric(msg.author.id);
-  const newHistory = {
+  const historic = getHistoric(msg.author.id);
+  const newHistoric = {
     userId: msg.author.id,
     channelName: args,
   };
-  if (history) {
-    editHistoricName(newHistory);
+  if (historic) {
+    editHistoricName(newHistoric);
   } else {
-    addHistoricName(newHistory);
+    addHistoricName(newHistoric);
   }
   try {
     await channel.edit(
@@ -131,8 +131,8 @@ async function lockChannel(
     // We ask the user if he wants to load his last permissions
     const creator = msg.author;
     const guildSetup = getGuildSetup(msg.guild!.id);
-    const historyPermissions = getAllHistoryPermissions(creator.id);
-    if (historyPermissions && historyPermissions.length > 0) {
+    const historicPermissions = getAllHistoricPermissions(creator.id);
+    if (historicPermissions && historicPermissions.length > 0) {
       const commandsChannel = msg.guild!.channels.resolve(
         guildSetup.commandsChannelId
       ) as TextChannel;
@@ -140,7 +140,7 @@ async function lockChannel(
         // We get the nickname of each potential allowed member
         let allowedMembersAndRoles = '';
         try {
-          const allowedIdsList = historyPermissions.map(
+          const allowedIdsList = historicPermissions.map(
             (perm) => perm.permittedUserId
           );
 
@@ -199,7 +199,7 @@ async function lockChannel(
                 const reaction = collected.first();
                 if (reaction?.emoji.name === accept) {
                   // We update every allowed user
-                  const permissions: OverwriteResolvable[] = historyPermissions.map(
+                  const permissions: OverwriteResolvable[] = historicPermissions.map(
                     (perm) => ({
                       id: perm.permittedUserId,
                       allow: ['CONNECT'],
@@ -229,15 +229,15 @@ async function lockChannel(
                   proposal.channel.send('✅ Last permissions **loaded**');
                   proposal.delete();
                 } else {
-                  // We clear his history
-                  deleteAllHistoryPermissions(creator.id);
+                  // We clear his historic
+                  deleteAllHistoricPermissions(creator.id);
                   proposal.channel.send('❌ Last permissions **not loaded**');
                   proposal.delete();
                 }
               })
               .catch(() => {
-                // We clear his history
-                deleteAllHistoryPermissions(creator.id);
+                // We clear his historic
+                deleteAllHistoricPermissions(creator.id);
                 proposal.delete();
               });
           })
@@ -256,7 +256,7 @@ async function unlockChannel(msg: Message, channel: VoiceChannel) {
       { CONNECT: true },
       `Voice Bot: The owner (${msg.author.username}) wants to unlock the channel`
     );
-    deleteAllHistoryPermissions(msg.author.id);
+    deleteAllHistoricPermissions(msg.author.id);
     msg.channel.send('🔓 Channel **unlocked**');
   } catch (error) {
     handleErrors(msg, error);
@@ -277,7 +277,7 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
           { CONNECT: true },
           `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.user.username}) in their channel`
         );
-        addHistoryPermission({
+        addHistoricPermission({
           userId: msg.author.id,
           permittedUserId: allowed.user.id,
         });
@@ -290,7 +290,7 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
           { CONNECT: true },
           `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.name}) in their channel`
         );
-        addHistoryPermission({
+        addHistoricPermission({
           userId: msg.author.id,
           permittedUserId: allowed.id,
         });
@@ -344,15 +344,15 @@ async function setUserChannelLimit(
 ) {
   if (+args >= 0 && +args <= 99) {
     // We keep this user limit in DB
-    const history = getHistoric(msg.author.id);
-    const newHistory = {
+    const historic = getHistoric(msg.author.id);
+    const newHistoric = {
       userId: msg.author.id,
       userLimit: +args,
     };
-    if (history) {
-      editHistoricLimit(newHistory);
+    if (historic) {
+      editHistoricLimit(newHistoric);
     } else {
-      addHistoricLimit(newHistory);
+      addHistoricLimit(newHistoric);
     }
     try {
       await channel.setUserLimit(
