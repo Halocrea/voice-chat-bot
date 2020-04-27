@@ -29,7 +29,7 @@ voiceChatBot.on('message', async (msg) => {
     const args = cmdAndArgs.join(' ').trim();
 
     if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
-      handleSetup(voiceChatBot, msg, cmd, args);
+      handleSetup(voiceChatBot, localGuild, msg, cmdPrefix, cmd, args);
     } else if (localGuild && cmd) {
       handleCommand(voiceChatBot, msg, cmd, args);
     } else if (!cmd) {
@@ -39,8 +39,7 @@ voiceChatBot.on('message', async (msg) => {
       msg.channel.send({
         embed: {
           title: 'DENIED! Please set me up and configure me first.',
-          description:
-            'Please ask an Administrator to configure me using the `!voice setup` command; I require a few additionnal info to get things to work ☹️',
+          description: `Please ask an Administrator to configure me using the \`${process.env.CMD_PREFIX} setup\` command; I require a few additionnal info to get things to work ☹️`,
           color: 16711680,
           thumbnail: {
             url: voiceChatBot.user?.avatarURL(),

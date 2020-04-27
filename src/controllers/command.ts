@@ -71,13 +71,17 @@ export async function handleCommand(
       } else if (cmd === 'claim') {
         claimChannel(msg, channel, userId);
       } else {
-        msg.channel.send(`You do not own the channel you\'re trying to modify; if its owner left, you can claim it with \`${process.env.CMD_PREFIX} claim\`.`);
+        msg.channel.send(
+          `You do not own the channel you\'re trying to modify; if its owner left, you can claim it with \`${process.env.CMD_PREFIX} claim\`.`
+        );
       }
     } else {
-      msg.channel.send('You have to be in a voice channel to run this kind of commands.');
+      msg.channel.send(
+        'You have to be in a voice channel to run this kind of commands.'
+      );
     }
   } else {
-    msg.channel.send(generateHelpEmbed(voiceChatBot));
+    msg.channel.send(generateHelpEmbed(voiceChatBot, msg));
   }
 }
 
@@ -167,7 +171,8 @@ async function lockChannel(
         commandsChannel
           .send({
             embed: {
-              title: 'Do you want me to set the permissions just like your previous voice channel?',
+              title:
+                'Do you want me to set the permissions just like your previous voice channel?',
               description: `Those members/roles would be allowed to join you:\n\n${allowedMembersAndRoles}`,
               color: 7944435,
               timestamp: new Date(),
@@ -276,7 +281,9 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
           userId: msg.author.id,
           permittedUserId: allowed.user.id,
         });
-        msg.channel.send(`✅ **${allowed.user.username}** can now join your channel!`);
+        msg.channel.send(
+          `✅ **${allowed.user.username}** can now join your channel!`
+        );
       } else {
         await channel.updateOverwrite(
           allowed,
@@ -287,10 +294,14 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
           userId: msg.author.id,
           permittedUserId: allowed.id,
         });
-        msg.channel.send(`✅ **@${allowed.name}** members can now join your channel!`);
+        msg.channel.send(
+          `✅ **@${allowed.name}** members can now join your channel!`
+        );
       }
     } else {
-      msg.channel.send('I could not find this user or role, please make sure you typed the name correctly and try again.');
+      msg.channel.send(
+        'I could not find this user or role, please make sure you typed the name correctly and try again.'
+      );
     }
   } catch (error) {
     handleErrors(msg, error);
@@ -311,10 +322,14 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
         { CONNECT: false },
         `Kicked user (${rejected.user.username}) out of the channel`
       );
-      msg.channel.send(`💢 **${rejected.user.username}** has been kicked out of the channel!`);
+      msg.channel.send(
+        `💢 **${rejected.user.username}** has been kicked out of the channel!`
+      );
       clearChannel(msg.channel as TextChannel, 2);
     } else {
-      msg.channel.send('I could not find this user, please make sure you typed the name correctly and try again.');
+      msg.channel.send(
+        'I could not find this user, please make sure you typed the name correctly and try again.'
+      );
       clearChannel(msg.channel as TextChannel, 2);
     }
   } catch (error) {
@@ -400,13 +415,16 @@ async function setChannelBitrate(
       handleErrors(msg, error);
     }
   } else {
-    msg.channel.send(
-      `Please give a BPS value between 8000 and ${bitrateMax}.`
-    );
+    msg.channel.send(`Please give a BPS value between 8000 and ${bitrateMax}.`);
   }
 }
 
-function generateHelpEmbed(voiceChatBot: Client) {
+function generateHelpEmbed(voiceChatBot: Client, msg: Message) {
+  const localGuild = getLocalGuild(msg.guild!.id);
+  const cmdPrefix =
+    localGuild && localGuild.prefix
+      ? localGuild.prefix
+      : process.env.CMD_PREFIX;
   return {
     embed: {
       author: {
@@ -414,29 +432,29 @@ function generateHelpEmbed(voiceChatBot: Client) {
         icon_url: voiceChatBot.user?.avatarURL(),
       },
       title: 'Commands list',
-      description: `**Notice: ** You must own the voice channel you're currently in to perform most of these actions (except for \`claim\`). \nHere are all the commands you can use:\n
-      **name <channel_name>**
+      description: `**Notice: ** You must own the voice channel you're currently in to perform most of these actions (except for \`${cmdPrefix} claim\`). \nHere are all the commands you can use:\n
+      **${cmdPrefix} name <channel_name>**
       Rename your channel. \n
 
-      **lock**
-      Lock your channel; nobody can join you unless you explicitely allow them to do so by using the \`${process.env.CMD_PREFIX} permit\` command (see hereafter). \n
+      **${cmdPrefix} lock**
+      Lock your channel; nobody can join you unless you explicitely allow them to do so by using the \`${cmdPrefix} permit\` command (see hereafter). \n
 
-      **permit <@someone/@role/username>**
+      **${cmdPrefix} permit <@someone/@role/username>**
       Allow the given user or role to join your locked channel. \n
 
-      **unlock**
+      **${cmdPrefix} unlock**
       Open your locked channel to everyone. \n
 
-      **reject <@someone/username>**
+      **${cmdPrefix} reject <@someone/username>**
       Kick a user out of your channel. \n
 
-      **claim**
+      **${cmdPrefix} claim**
       Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.\n
 
-      **limit <0 <= number <= 99>**
+      **${cmdPrefix} limit <0 <= number <= 99>**
       Set a user limit to your channel (Here 0 means **unlimited**).\n
 
-      **bitrate <number>**
+      **${cmdPrefix} bitrate <number>**
       Set the channel's bitrate.`,
       timestamp: new Date(),
       image: {
