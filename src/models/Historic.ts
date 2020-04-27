@@ -1,9 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const db = new Database(path.join(__dirname, '../../saves/historic.db'), {
-  verbose: console.log,
-});
+const db = new Database(path.join(__dirname, '../../saves/historic.db'));
 
 const createHistoric = `CREATE TABLE IF NOT EXISTS historic (
   userId VARCHAR(30) PRIMARY KEY,

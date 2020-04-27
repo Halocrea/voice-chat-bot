@@ -1,9 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const db = new Database(path.join(__dirname, '../../saves/guild_setup.db'), {
-  verbose: console.log,
-});
+const db = new Database(path.join(__dirname, '../../saves/guild_setup.db'));
 
 const createSetupGuild = `CREATE TABLE IF NOT EXISTS guild_setup (
   guildId VARCHAR(30) PRIMARY KEY,

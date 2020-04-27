@@ -2,10 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 const db = new Database(
-  path.join(__dirname, '../../saves/historic_permission.db'),
-  {
-    verbose: console.log,
-  }
+  path.join(__dirname, '../../saves/historic_permission.db')
 );
 
 const createHistoricPermission = `CREATE TABLE IF NOT EXISTS historic_permission (

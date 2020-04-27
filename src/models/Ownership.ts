@@ -1,9 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const db = new Database(path.join(__dirname, '../../saves/ownership.db'), {
-  verbose: console.log,
-});
+const db = new Database(path.join(__dirname, '../../saves/ownership.db'));
 
 const createOwnership = `CREATE TABLE IF NOT EXISTS ownership (
   ownedChannelId VARCHAR(30) PRIMARY KEY,
