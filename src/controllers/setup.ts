@@ -324,7 +324,7 @@ function helpSetup(voiceChatBot: Client, cmdPrefix: string, msg: Message) {
       This text channel doesn't need to be into the voice category, but I must be able to read it and to send messages into it.\n
 
       **${cmdPrefix} setup-clear**
-      When you run this command, you delete all the IDs I stored for your server. After running it, you can run \`${cmdPrefix} setup\` to set ids up again.
+      When you run this command, you delete all the IDs I stored for your server. After running it, you can run \`${cmdPrefix} setup\` to set IDs up again.
       `,
       image: {
         url:
