@@ -16,6 +16,7 @@ cp sample.env .env
 ### Setup
 
 ```sh
+npm install -g typescript
 npm install
 ```
 
