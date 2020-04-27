@@ -1,7 +1,7 @@
 import { VoiceState } from 'discord.js';
 import { GuildSetup, getGuildSetup } from '../models/GuildSetup';
-import { addOwning, removeOwning } from '../models/Owning';
 import { getHistoric } from '../models/Historic';
+import { addOwnership, deleteOwnership } from '../models/Ownership';
 
 export function handleVoiceEvent(oldState: VoiceState, newState: VoiceState) {
   const guildSetup = getGuildSetup(newState.guild.id);
@@ -44,7 +44,7 @@ async function createVoiceChannel(
     // We move the user inside his new channel
     const newChannel = await newGuildChannel.fetch();
     newState.setChannel(newChannel, 'A user creates a new channel');
-    addOwning({
+    addOwnership({
       userId: creatorId,
       ownedChannelId: newChannel.id,
     });
@@ -71,7 +71,7 @@ async function deleteVoiceChannel(
       await channelLeft.lockPermissions();
       channelLeft
         .delete('Channel empty')
-        .then(() => removeOwning(channelLeft.id))
+        .then(() => deleteOwnership(channelLeft.id))
         .catch(console.error);
     } catch (error) {
       console.error(error);

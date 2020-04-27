@@ -8,7 +8,7 @@ import {
   DiscordAPIError,
   OverwriteResolvable,
 } from 'discord.js';
-import { editOwning, getOwner } from '../models/Owning';
+import { getOwner, editOwnership } from '../models/Ownership';
 import {
   addHistoryPermission,
   deleteAllHistoryPermissions,
@@ -378,7 +378,7 @@ async function claimChannel(
   // We need to check if the current owner is in the channel
   const ownerMember = channel.members.get(userId);
   if (!ownerMember) {
-    editOwning({
+    editOwnership({
       ownedChannelId: channel.id,
       userId: msg.author.id,
     });

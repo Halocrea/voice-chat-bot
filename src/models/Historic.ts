@@ -46,8 +46,3 @@ export function editHistoricLimit(historic: Historic) {
     'UPDATE Historic SET userLimit = ? WHERE userId = ?';
   db.prepare(updateHistoricLimit).run([historic.userLimit, historic.userId]);
 }
-
-export function removeHistoricName(userId: string) {
-  const deleteHistoricName = 'DELETE FROM Historic WHERE userId = ?';
-  db.prepare(deleteHistoricName).run(userId);
-}
