@@ -42,7 +42,20 @@ npm start
 ## About
 
 This bot is here to let your community manage their voice channels on their own.<br/>
-Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
+Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel inside the category and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
+
+### Permissions required
+
+In order to work properly, this bot will this set of permissions globally and on the voice category:
+
+- Manage Roles
+- Manage Channels
+- View Channels
+- Send Messages
+- Manage Messages
+- Read Message History
+- Connect
+- Move Members
 
 ## Commands list
 
