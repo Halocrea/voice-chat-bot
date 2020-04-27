@@ -1,23 +1,23 @@
 import { VoiceState } from 'discord.js';
-import { getLocalGuild, LocalGuild } from '../models/Local-guild';
+import { GuildSetup, getGuildSetup } from '../models/GuildSetup';
 import { addOwning, removeOwning } from '../models/Owning';
 import { getHistoric } from '../models/Historic';
 
 export function handleVoiceEvent(oldState: VoiceState, newState: VoiceState) {
-  const localGuild = getLocalGuild(newState.guild.id);
+  const guildSetup = getGuildSetup(newState.guild.id);
   // Create a voice channel when a user join the "creating" channel
-  if (newState.channelID === localGuild.creatingChannelId) {
-    createVoiceChannel(localGuild, newState);
+  if (newState.channelID === guildSetup.creatingChannelId) {
+    createVoiceChannel(guildSetup, newState);
   }
 
   // Having null as an old state channel id means that the user wasn't in a vocal channel before
   if (oldState.channelID) {
-    deleteVoiceChannel(localGuild, oldState, newState);
+    deleteVoiceChannel(guildSetup, oldState, newState);
   }
 }
 
 async function createVoiceChannel(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   newState: VoiceState
 ) {
   try {
@@ -31,7 +31,7 @@ async function createVoiceChannel(
 
     const newGuildChannel = await newState.guild.channels.create(channelName, {
       type: 'voice',
-      parent: localGuild.categoryId,
+      parent: guildSetup.categoryId,
       userLimit: history?.userLimit ?? 0,
       permissionOverwrites: [
         {
@@ -54,7 +54,7 @@ async function createVoiceChannel(
 }
 
 async function deleteVoiceChannel(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   oldState: VoiceState,
   newState: VoiceState
 ) {
@@ -64,8 +64,8 @@ async function deleteVoiceChannel(
   if (
     channelLeft &&
     !memberCount &&
-    channelLeft.parentID === localGuild.categoryId &&
-    channelLeft.id !== localGuild.creatingChannelId
+    channelLeft.parentID === guildSetup.categoryId &&
+    channelLeft.id !== guildSetup.creatingChannelId
   ) {
     try {
       await channelLeft.lockPermissions();

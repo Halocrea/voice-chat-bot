@@ -1,22 +1,21 @@
 import { Message, Client, OverwriteResolvable } from 'discord.js';
 import {
-  addLocalGuild,
-  addLocalGuildId,
-  getLocalGuild,
   editCategoryId,
-  removeLocalGuild,
   editCreatingChannelId,
   editCommandsChannelId,
   editPrefix,
-  LocalGuild,
-} from '../models/Local-guild';
+  GuildSetup,
+  addGuildSetup,
+  addGuildSetupId,
+  deleteGuildSetup,
+} from '../models/GuildSetup';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 export function handleSetup(
   voiceChatBot: Client,
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   msg: Message,
   cmdPrefix: string,
   cmd: string,
@@ -26,7 +25,7 @@ export function handleSetup(
   const manual = '✍️';
 
   // If we don't have a local guild, it means that the user is trying to set the bot up for the first time
-  if (!localGuild) {
+  if (!guildSetup) {
     msg.channel
       .send({
         embed: {
@@ -72,19 +71,19 @@ export function handleSetup(
   } else {
     switch (cmd) {
       case 'setup-prefix':
-        setupPrefix(localGuild, voiceChatBot, cmdPrefix, msg, args);
+        setupPrefix(guildSetup, voiceChatBot, cmdPrefix, msg, args);
         break;
       case 'setup-category':
-        setupCategory(localGuild, voiceChatBot, cmdPrefix, msg, args);
+        setupCategory(guildSetup, voiceChatBot, cmdPrefix, msg, args);
         break;
       case 'setup-voice':
-        setupVoice(localGuild, voiceChatBot, cmdPrefix, msg, args);
+        setupVoice(guildSetup, voiceChatBot, cmdPrefix, msg, args);
         break;
       case 'setup-commands':
-        setupCommands(localGuild, voiceChatBot, cmdPrefix, msg, args);
+        setupCommands(guildSetup, voiceChatBot, cmdPrefix, msg, args);
         break;
       case 'setup-clear':
-        clearSetup(localGuild, voiceChatBot, cmdPrefix, msg);
+        clearSetup(guildSetup, voiceChatBot, cmdPrefix, msg);
         break;
       case 'setup-help':
         helpSetup(voiceChatBot, cmdPrefix, msg);
@@ -138,7 +137,7 @@ async function autoSetup(
       parent: category?.id,
       permissionOverwrites: permissions,
     });
-    addLocalGuild({
+    addGuildSetup({
       guildId: setupMessage.guild!.id,
       prefix: process.env.CMD_PREFIX!,
       categoryId: category!.id,
@@ -157,7 +156,7 @@ function manualSetup(
   cmdPrefix: string,
   setupMessage: Message
 ) {
-  addLocalGuildId(setupMessage.guild!.id);
+  addGuildSetupId(setupMessage.guild!.id);
   setupMessage.channel.send({
     embed: {
       title: `Step 1: The Command prefix`,
@@ -172,14 +171,14 @@ function manualSetup(
 }
 
 function setupPrefix(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
   args: string
 ) {
-  const initialized = !!localGuild.prefix;
-  editPrefix(localGuild.guildId, args);
+  const initialized = !!guildSetup.prefix;
+  editPrefix(guildSetup.guildId, args);
   if (!initialized) {
     msg.channel.send({
       embed: {
@@ -207,14 +206,14 @@ function setupPrefix(
 }
 
 function setupCategory(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
   args: string
 ) {
-  const initialized = !!localGuild.categoryId;
-  editCategoryId(localGuild.guildId, args);
+  const initialized = !!guildSetup.categoryId;
+  editCategoryId(guildSetup.guildId, args);
   if (!initialized) {
     msg.channel.send({
       embed: {
@@ -234,14 +233,14 @@ function setupCategory(
 }
 
 function setupVoice(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
   args: string
 ) {
-  const initialized = !!localGuild.creatingChannelId;
-  editCreatingChannelId(localGuild.guildId, args);
+  const initialized = !!guildSetup.creatingChannelId;
+  editCreatingChannelId(guildSetup.guildId, args);
   if (!initialized) {
     msg.channel.send({
       embed: {
@@ -262,14 +261,14 @@ function setupVoice(
 }
 
 function setupCommands(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
   args: string
 ) {
-  const initialized = !!localGuild.commandsChannelId;
-  editCommandsChannelId(localGuild.guildId, args);
+  const initialized = !!guildSetup.commandsChannelId;
+  editCommandsChannelId(guildSetup.guildId, args);
   if (!initialized) {
     sendEmbedSetupCompleted(voiceChatBot, cmdPrefix, msg);
   } else {
@@ -278,12 +277,12 @@ function setupCommands(
 }
 
 function clearSetup(
-  localGuild: LocalGuild,
+  guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message
 ) {
-  removeLocalGuild(localGuild.guildId);
+  deleteGuildSetup(guildSetup.guildId);
   msg.channel.send({
     embed: {
       title: `Setup correctly cleared!`,

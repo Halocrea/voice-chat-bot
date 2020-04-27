@@ -14,7 +14,7 @@ import {
   deleteAllHistoryPermissions,
   getAllHistoryPermissions,
 } from '../models/History-permission';
-import { getLocalGuild } from '../models/Local-guild';
+import { getGuildSetup } from '../models/GuildSetup';
 import {
   getHistoric,
   editHistoricName,
@@ -130,11 +130,11 @@ async function lockChannel(
 
     // We ask the user if he wants to load his last permissions
     const creator = msg.author;
-    const localGuild = getLocalGuild(msg.guild!.id);
+    const guildSetup = getGuildSetup(msg.guild!.id);
     const historyPermissions = getAllHistoryPermissions(creator.id);
     if (historyPermissions && historyPermissions.length > 0) {
       const commandsChannel = msg.guild!.channels.resolve(
-        localGuild.commandsChannelId
+        guildSetup.commandsChannelId
       ) as TextChannel;
       if (commandsChannel && commandsChannel.type === 'text') {
         // We get the nickname of each potential allowed member
@@ -420,10 +420,10 @@ async function setChannelBitrate(
 }
 
 function generateHelpEmbed(voiceChatBot: Client, msg: Message) {
-  const localGuild = getLocalGuild(msg.guild!.id);
+  const guildSetup = getGuildSetup(msg.guild!.id);
   const cmdPrefix =
-    localGuild && localGuild.prefix
-      ? localGuild.prefix
+    guildSetup && guildSetup.prefix
+      ? guildSetup.prefix
       : process.env.CMD_PREFIX;
   return {
     embed: {

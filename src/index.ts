@@ -2,8 +2,8 @@ import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
 import { handleCommand } from './controllers/command';
 import { handleSetup } from './controllers/setup';
-import { getLocalGuild } from './models/Local-guild';
 import { handleVoiceEvent } from './controllers/voice-channel';
+import { getGuildSetup } from './models/GuildSetup';
 
 dotenv.config();
 const voiceChatBot = new discord.Client();
@@ -18,10 +18,10 @@ voiceChatBot.on('message', async (msg) => {
   if (!msg.guild) return;
 
   // We get the local setup
-  const localGuild = getLocalGuild(msg.guild!.id);
+  const guildSetup = getGuildSetup(msg.guild!.id);
   const cmdPrefix =
-    localGuild && localGuild.prefix
-      ? localGuild.prefix
+    guildSetup && guildSetup.prefix
+      ? guildSetup.prefix
       : process.env.CMD_PREFIX;
   if (cmdPrefix && msg.content.startsWith(cmdPrefix)) {
     const cmdAndArgs = msg.content.replace(cmdPrefix, '').trim().split(' ');
@@ -29,8 +29,8 @@ voiceChatBot.on('message', async (msg) => {
     const args = cmdAndArgs.join(' ').trim();
 
     if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
-      handleSetup(voiceChatBot, localGuild, msg, cmdPrefix, cmd, args);
-    } else if (localGuild && cmd) {
+      handleSetup(voiceChatBot, guildSetup, msg, cmdPrefix, cmd, args);
+    } else if (guildSetup && cmd) {
       handleCommand(voiceChatBot, msg, cmd, args);
     } else if (!cmd) {
       msg.channel.send(`Don't forget to use a command 😏`);
