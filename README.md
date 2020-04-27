@@ -80,6 +80,14 @@ Here are all the commands you can use:
 - Twitter: [@\_Grenadator](https://twitter.com/_Grenadator)
 - Github: [@Grenadator](https://github.com/Grenadator)
 
+## Quick Thanks
+
+- Thanks [@tepec](https://github.com/Tepec) for helping me a lot on developing this bot and for the translations
+- Thanks Bendak for all the features ideas, and both of you for taking the time to test the bot
+- Thanks [@Aronild](https://twitter.com/AroniId) for your opinion and your wonderful gif on help commands
+
+You guys are the best 😎
+
 ## 🤝 Contributing
 
 Contributions, issues and feature requests are welcome!
