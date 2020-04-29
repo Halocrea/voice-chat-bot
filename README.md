@@ -46,7 +46,7 @@ Basically, by joining a specified permanent voice channel living inside a specif
 
 ### Permissions required
 
-In order to work properly, this bot will this set of permissions globally and on the voice category:
+In order to work properly, this bot will need this set of permissions globally and on the voice category:
 
 - Manage Roles
 - Manage Channels

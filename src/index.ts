@@ -14,7 +14,7 @@ voiceChatBot.on('ready', () => {
   });
 });
 
-voiceChatBot.on('message', async (msg) => {
+voiceChatBot.on('message', (msg) => {
   if (!msg.guild) return;
 
   // We get the local setup
