@@ -5,28 +5,48 @@
 
 > A Discord bot that lets your community manage their voice channels themselves
 
-## Create `.env` file and fill it with your information
+## About
+
+This bot is here to let your community manage their voice channels on their own.<br/>
+Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel inside the category and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
+
+### Permissions required
+
+In order to work properly, this bot will need this set of permissions globally and on the voice category:
+
+- Manage Roles
+- Manage Channels
+- View Channels
+- Send Messages
+- Manage Messages
+- Read Message History
+- Connect
+- Move Members
+
+## Install
+
+### Create `.env` file and fill it with your information
 
 ```sh
 cp sample.env .env
 ```
 
-## Install and run with Docker
+### Install and run with Docker
 
 ```sh
 docker build -t voice-chat-bot .
 docker run -d -v /absolute/host/path/to/saves/:app/saves --restart=always --name=voice-chat-bot voice-chat-bot
 ```
 
-## Install with npm
+### Install with npm
 
-### Setup
+#### Setup
 
 ```sh
 npm install
 ```
 
-### Run development
+#### Run development
 
 ```sh
 npm run dev
@@ -45,24 +65,6 @@ npm run build
 ```sh
 npm start
 ```
-
-## About
-
-This bot is here to let your community manage their voice channels on their own.<br/>
-Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel inside the category and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
-
-### Permissions required
-
-In order to work properly, this bot will need this set of permissions globally and on the voice category:
-
-- Manage Roles
-- Manage Channels
-- View Channels
-- Send Messages
-- Manage Messages
-- Read Message History
-- Connect
-- Move Members
 
 ## Commands list
 
