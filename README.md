@@ -52,15 +52,13 @@ npm install
 npm run dev
 ```
 
-## Usage
-
-### Build
+#### Build
 
 ```sh
 npm run build
 ```
 
-### Run build
+#### Run build
 
 ```sh
 npm start
