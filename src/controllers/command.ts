@@ -335,7 +335,9 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
         `Kicked user (${rejected.user.username}) out of the channel`
       );
       msg.channel.send(
-        `💢 **${rejected.user.username}** has been kicked out of the channel!`
+        `💢 **${
+          rejected.nickname ?? rejected.user.username
+        }** has been kicked out of the channel!`
       );
       clearChannel(msg.channel as TextChannel, 2);
     } else {
