@@ -5,13 +5,20 @@
 
 > A Discord bot that lets your community manage their voice channels themselves
 
-## Install
-
-### Create `.env` file and fill it with your information
+## Create `.env` file and fill it with your information
 
 ```sh
 cp sample.env .env
 ```
+
+## Install and run with Docker
+
+```sh
+docker build -t voice-chat-bot .
+docker run -d -v /absolute/host/path/to/saves/:app/saves --restart=always --name=voice-chat-bot voice-chat-bot
+```
+
+## Install with npm
 
 ### Setup
 
