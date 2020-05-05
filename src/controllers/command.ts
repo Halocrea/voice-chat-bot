@@ -213,27 +213,11 @@ async function lockChannel(
                       allow: ['CONNECT'],
                     })
                   );
-                  // We add the owner
-                  permissions.push({
-                    id: creator.id,
-                    allow: ['CONNECT'],
-                  });
-                  // We deny everyone
-                  permissions.push({
-                    id: msg.guild!.id,
-                    deny: ['CONNECT'],
-                  });
-                  // We add the bot
-                  permissions.push({
-                    id: proposal.client.user!.id,
-                    allow: [
-                      'MANAGE_CHANNELS',
-                      'MANAGE_ROLES',
-                      'VIEW_CHANNEL',
-                      'CONNECT',
-                    ],
-                  });
-                  channel.edit({ permissionOverwrites: permissions });
+                  for (const allowedUser of historicPermissions) {
+                    channel.updateOverwrite(allowedUser.permittedUserId, {
+                      CONNECT: true,
+                    });
+                  }
                   proposal.channel.send('✅ Last permissions **loaded**');
                   proposal.delete();
                 } else {

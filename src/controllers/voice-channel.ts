@@ -62,7 +62,6 @@ async function deleteVoiceChannel(
     channelLeft.id !== guildSetup.creatingChannelId
   ) {
     try {
-      await channelLeft.lockPermissions();
       channelLeft
         .delete('Channel empty')
         .then(() => deleteOwnership(channelLeft.id))
