@@ -1,6 +1,6 @@
 # Welcome to voice-chat-bot 👋
 
-![Version](https://img.shields.io/badge/version-0.1.1-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-0.1.2-blue.svg?cacheSeconds=2592000)
 [![Twitter: _Grenadator](https://img.shields.io/twitter/follow/_Grenadator.svg?style=social)](https://twitter.com/_Grenadator)
 
 > A Discord bot that lets your community manage their voice channels themselves
