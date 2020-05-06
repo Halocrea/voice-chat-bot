@@ -7,6 +7,7 @@ import {
   GuildMember,
   DiscordAPIError,
   OverwriteResolvable,
+  Role,
 } from 'discord.js';
 import { getOwner, editOwnership } from '../models/Ownership';
 import { getGuildSetup } from '../models/GuildSetup';
@@ -257,48 +258,52 @@ async function unlockChannel(msg: Message, channel: VoiceChannel) {
 
 async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
   try {
-    const allowed =
-      msg.mentions.members?.first() ??
-      msg.mentions.roles.first() ??
-      (await findUserInGuildByName(msg.guild!, args));
-    if (allowed) {
-      // So now we need to check if the owner sent a member or a role
-      if (allowed instanceof GuildMember) {
-        await channel.updateOverwrite(
-          allowed,
-          { CONNECT: true },
-          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${
-            allowed.nickname ?? allowed.user.username
-          }) in their channel`
-        );
-        addHistoricPermission({
-          userId: msg.author.id,
-          permittedUserId: allowed.user.id,
-        });
-        msg.channel.send(
-          `✅ **${
-            allowed.nickname ?? allowed.user.username
-          }** can now join your channel!`
-        );
-      } else {
-        await channel.updateOverwrite(
-          allowed,
-          { CONNECT: true },
-          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.name}) in their channel`
-        );
-        addHistoricPermission({
-          userId: msg.author.id,
-          permittedUserId: allowed.id,
-        });
-        msg.channel.send(
-          `✅ **@${allowed.name}** members can now join your channel!`
-        );
-      }
-    } else {
-      msg.channel.send(
-        'I could not find this user or role, please make sure you typed the name correctly and try again.'
-      );
+    const allowed: (GuildMember | Role)[] = [];
+    const allowedNames: string[] = [];
+    msg.mentions.members?.each((m) => allowed.push(m));
+    msg.mentions.roles.each((r) => allowed.push(r));
+
+    if (allowed.length < 1) {
+      const nonMentionedUser = await findUserInGuildByName(msg.guild!, args);
+      if (nonMentionedUser) allowed.push(nonMentionedUser);
     }
+
+    allowed.forEach((a, i) => {
+      setTimeout(async () => {
+        if (a instanceof GuildMember) {
+          await channel.updateOverwrite(
+            a,
+            { CONNECT: true },
+            `Voice Bot: The owner (${
+              msg.author.username
+            }) wants to allow user (${
+              a.nickname ?? a.user.username
+            }) in their channel`
+          );
+          addHistoricPermission({
+            userId: msg.author.id,
+            permittedUserId: a.user.id,
+          });
+          allowedNames.push(a.nickname ?? a.user.username);
+        } else {
+          await channel.updateOverwrite(
+            a,
+            { CONNECT: true },
+            `Voice Bot: The owner (${msg.author.username}) wants to allow user (${a.name}) in their channel`
+          );
+          addHistoricPermission({
+            userId: msg.author.id,
+            permittedUserId: a.id,
+          });
+          allowedNames.push(a.name);
+        }
+        if (i === allowed.length - 1) {
+          msg.channel.send(
+            `✅ **${allowedNames.join(', ')}** can now join your channel!`
+          );
+        }
+      }, i * 25);
+    });
   } catch (error) {
     handleErrors(msg, error);
   }
