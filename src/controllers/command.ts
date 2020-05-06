@@ -249,7 +249,6 @@ async function unlockChannel(msg: Message, channel: VoiceChannel) {
       { CONNECT: true },
       `Voice Bot: The owner (${msg.author.username}) wants to unlock the channel`
     );
-    deleteAllHistoricPermissions(msg.author.id);
     msg.channel.send('🔓 Channel **unlocked**');
   } catch (error) {
     handleErrors(msg, error);
