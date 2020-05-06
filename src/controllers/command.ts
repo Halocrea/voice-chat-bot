@@ -7,6 +7,7 @@ import {
   GuildMember,
   DiscordAPIError,
   OverwriteResolvable,
+  Role,
 } from 'discord.js';
 import { getOwner, editOwnership } from '../models/Ownership';
 import { getGuildSetup } from '../models/GuildSetup';
@@ -257,7 +258,7 @@ async function unlockChannel(msg: Message, channel: VoiceChannel) {
 
 async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
   try {
-    const allowed: any[] = [];
+    const allowed: (GuildMember | Role)[] = [];
     const allowedNames: string[] = [];
     msg.mentions.members?.each((m) => allowed.push(m));
     msg.mentions.roles.each((r) => allowed.push(r));
