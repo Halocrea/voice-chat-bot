@@ -33,12 +33,6 @@ async function createVoiceChannel(
       type: 'voice',
       parent: guildSetup.categoryId,
       userLimit: history?.userLimit ?? 0,
-      permissionOverwrites: [
-        {
-          id: newState.client.user!.id,
-          allow: ['MANAGE_CHANNELS', 'MANAGE_ROLES', 'VIEW_CHANNEL', 'CONNECT'],
-        },
-      ],
     });
 
     // We move the user inside his new channel
@@ -68,7 +62,6 @@ async function deleteVoiceChannel(
     channelLeft.id !== guildSetup.creatingChannelId
   ) {
     try {
-      await channelLeft.lockPermissions();
       channelLeft
         .delete('Channel empty')
         .then(() => deleteOwnership(channelLeft.id))

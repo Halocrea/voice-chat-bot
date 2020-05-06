@@ -1,43 +1,9 @@
 # Welcome to voice-chat-bot 👋
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-0.1.2-blue.svg?cacheSeconds=2592000)
 [![Twitter: _Grenadator](https://img.shields.io/twitter/follow/_Grenadator.svg?style=social)](https://twitter.com/_Grenadator)
 
 > A Discord bot that lets your community manage their voice channels themselves
-
-## Install
-
-### Create `.env` file and fill it with your information
-
-```sh
-cp sample.env .env
-```
-
-### Setup
-
-```sh
-npm install
-```
-
-### Run development
-
-```sh
-npm run dev
-```
-
-## Usage
-
-### Build
-
-```sh
-npm run build
-```
-
-### Run build
-
-```sh
-npm start
-```
 
 ## About
 
@@ -46,7 +12,7 @@ Basically, by joining a specified permanent voice channel living inside a specif
 
 ### Permissions required
 
-In order to work properly, this bot will this set of permissions globally and on the voice category:
+In order to work properly, this bot will need this set of permissions globally and on the voice category:
 
 - Manage Roles
 - Manage Channels
@@ -56,6 +22,47 @@ In order to work properly, this bot will this set of permissions globally and on
 - Read Message History
 - Connect
 - Move Members
+
+## Install
+
+### Create `.env` file and fill it with your information
+
+```sh
+cp sample.env .env
+```
+
+### Install and run with Docker
+
+```sh
+docker build -t voice-chat-bot .
+docker run -d -v /absolute/host/path/to/saves/:app/saves --restart=always --name=voice-chat-bot voice-chat-bot
+```
+
+### Install with npm
+
+#### Setup
+
+```sh
+npm install
+```
+
+#### Run development
+
+```sh
+npm run dev
+```
+
+#### Build
+
+```sh
+npm run build
+```
+
+#### Run build
+
+```sh
+npm start
+```
 
 ## Commands list
 

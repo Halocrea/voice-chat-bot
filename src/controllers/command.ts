@@ -102,12 +102,20 @@ async function renameChannel(
     addHistoricName(newHistoric);
   }
   try {
+    const members = await msg.guild!.members.fetch();
+    const member = members.find(
+      (user) => user.user.username === msg.author.username
+    );
     await channel.edit(
       { name: args },
-      `Voice Bot: Asked by its owner (${msg.author.username})`
+      `Voice Bot: Asked by its owner (${
+        member && member.nickname ? member.nickname : msg.author.username
+      })`
     );
     msg.channel.send(
-      `ℹ️ The channel has been renamed "**${args}**", ${msg.author.username}!`
+      `ℹ️ The channel has been renamed "**${args}**", ${
+        member && member.nickname ? member.nickname : msg.author.username
+      }!`
     );
   } catch (error) {
     handleErrors(msg, error);
@@ -120,12 +128,12 @@ async function lockChannel(
   userId: string
 ) {
   try {
+    await channel.updateOverwrite(userId, { CONNECT: true });
     await channel.updateOverwrite(
       msg.guild?.id!,
       { CONNECT: false },
       `Voice Bot: The owner (${msg.author.username}) wants to lock the channel`
     );
-    await channel.updateOverwrite(userId, { CONNECT: true });
     msg.channel.send('🔒 The channel is now **locked**');
 
     // We ask the user if he wants to load his last permissions
@@ -205,27 +213,11 @@ async function lockChannel(
                       allow: ['CONNECT'],
                     })
                   );
-                  // We add the owner
-                  permissions.push({
-                    id: creator.id,
-                    allow: ['CONNECT'],
-                  });
-                  // We deny everyone
-                  permissions.push({
-                    id: msg.guild!.id,
-                    deny: ['CONNECT'],
-                  });
-                  // We add the bot
-                  permissions.push({
-                    id: proposal.client.user!.id,
-                    allow: [
-                      'MANAGE_CHANNELS',
-                      'MANAGE_ROLES',
-                      'VIEW_CHANNEL',
-                      'CONNECT',
-                    ],
-                  });
-                  channel.edit({ permissionOverwrites: permissions });
+                  for (const allowedUser of historicPermissions) {
+                    channel.updateOverwrite(allowedUser.permittedUserId, {
+                      CONNECT: true,
+                    });
+                  }
                   proposal.channel.send('✅ Last permissions **loaded**');
                   proposal.delete();
                 } else {
@@ -275,14 +267,18 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
         await channel.updateOverwrite(
           allowed,
           { CONNECT: true },
-          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${allowed.user.username}) in their channel`
+          `Voice Bot: The owner (${msg.author.username}) wants to allow user (${
+            allowed.nickname ?? allowed.user.username
+          }) in their channel`
         );
         addHistoricPermission({
           userId: msg.author.id,
           permittedUserId: allowed.user.id,
         });
         msg.channel.send(
-          `✅ **${allowed.user.username}** can now join your channel!`
+          `✅ **${
+            allowed.nickname ?? allowed.user.username
+          }** can now join your channel!`
         );
       } else {
         await channel.updateOverwrite(
@@ -323,7 +319,9 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
         `Kicked user (${rejected.user.username}) out of the channel`
       );
       msg.channel.send(
-        `💢 **${rejected.user.username}** has been kicked out of the channel!`
+        `💢 **${
+          rejected.nickname ?? rejected.user.username
+        }** has been kicked out of the channel!`
       );
       clearChannel(msg.channel as TextChannel, 2);
     } else {

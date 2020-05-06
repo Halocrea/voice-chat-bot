@@ -22,7 +22,7 @@ export function handleSetup(
   args: string
 ) {
   const auto = '🤖';
-  const manual = '✍️';
+  const manual = '⚙️';
 
   // If we don't have a local guild, it means that the user is trying to set the bot up for the first time
   if (!guildSetup) {
@@ -160,7 +160,7 @@ function manualSetup(
   setupMessage.channel.send({
     embed: {
       title: `Step 1: The Command prefix`,
-      description: `Please indicate a command prefix that I'll watch to know when someone is requesting something from me. By default, my command prefix is \`!voice\`, but you can set it to anything you want within 15 characters.\n
+      description: `Please indicate a command prefix that I'll watch to know when someone is requesting something from me. By default, my command prefix is \` ${process.env.CMD_PREFIX}\`, but you can set it to anything you want within 15 characters.\n
       Please use \`${cmdPrefix} setup-prefix <prefix>\` to change my command prefix.`,
       color: 14323205,
       thumbnail: {
