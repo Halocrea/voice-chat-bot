@@ -6,7 +6,16 @@ import { handleVoiceEvent } from './controllers/voice-channel';
 import { getGuildSetup } from './models/GuildSetup';
 
 dotenv.config();
-const voiceChatBot = new discord.Client();
+const voiceChatBot = new discord.Client({
+  ws: {
+    intents: [
+      'GUILDS',
+      'GUILD_MESSAGES',
+      'GUILD_MESSAGE_REACTIONS',
+      'GUILD_VOICE_STATES',
+    ],
+  },
+});
 
 voiceChatBot.on('ready', () => {
   voiceChatBot.user?.setActivity(`Made with ❤️`, {
