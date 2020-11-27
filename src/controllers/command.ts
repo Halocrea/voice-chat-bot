@@ -103,8 +103,7 @@ async function renameChannel(
     addHistoricName(newHistoric);
   }
   try {
-    const members = await msg.guild!.members.fetch();
-    const member = members.find(
+    const member = msg.guild!.members.cache.find(
       (user) => user.user.username === msg.author.username
     );
     await channel.edit(
