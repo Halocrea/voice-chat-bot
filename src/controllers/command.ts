@@ -473,8 +473,7 @@ function generateHelpEmbed(voiceChatBot: Client, msg: Message) {
 async function findUserInGuildByName(guild: Guild, name: string) {
   let member;
   try {
-    const members = await guild.members.fetch();
-    member = members.find(
+    member = guild!.members.cache.find(
       (user) => user.nickname === name || user.user.username === name
     );
   } catch (error) {
