@@ -24,6 +24,7 @@ import {
   deleteAllHistoricPermissions,
   addHistoricPermission,
 } from '../models/HistoricPermission';
+import { getAllModerationRoles } from '../models/ModerationRoles';
 
 dotenv.config();
 
@@ -41,7 +42,8 @@ export async function handleCommand(
         userId === msg.author.id ||
         (process.env.MAINTAINER_ID &&
           process.env.MAINTAINER_ID === msg.author.id) ||
-        msg.member?.hasPermission('ADMINISTRATOR')
+        msg.member?.hasPermission('ADMINISTRATOR') ||
+        isModerator(msg, msg.member)
       ) {
         switch (cmd) {
           case 'name':
@@ -318,20 +320,29 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
       msg.mentions.members?.first() ??
       (await findUserInGuildByName(msg.guild!, args));
     if (rejected) {
-      await rejected.voice.kick(
-        `Voice Bot: The owner (${msg.author.username}) wants to kick user (${rejected.user.username}) in their channel`
-      );
-      channel.updateOverwrite(
-        rejected,
-        { CONNECT: false },
-        `Kicked user (${rejected.user.username}) out of the channel`
-      );
-      msg.channel.send(
-        `💢 **${
-          rejected.nickname ?? rejected.user.username
-        }** has been kicked out of the channel!`
-      );
-      clearChannel(msg.channel as TextChannel, 2);
+      if (
+        !isModerator(msg, rejected) ||
+        !rejected.hasPermission('ADMINISTRATOR')
+      ) {
+        await rejected.voice.kick(
+          `Voice Bot: The owner (${msg.author.username}) wants to kick user (${rejected.user.username}) in their channel`
+        );
+        channel.updateOverwrite(
+          rejected,
+          { CONNECT: false },
+          `Kicked user (${rejected.user.username}) out of the channel`
+        );
+        msg.channel.send(
+          `💢 **${
+            rejected.nickname ?? rejected.user.username
+          }** has been kicked out of the channel!`
+        );
+        clearChannel(msg.channel as TextChannel, 2);
+      } else {
+        msg.channel.send(
+          "🛑 Sorry but you can't reject a moderator or an administrator from the channel 😏"
+        );
+      }
     } else {
       msg.channel.send(
         'I could not find this user, please make sure you typed the name correctly and try again.'
@@ -485,6 +496,17 @@ async function findUserInGuildByName(guild: Guild, name: string) {
     console.error(error);
   }
   return member;
+}
+
+function isModerator(msg: Message, user: GuildMember | null): Role | undefined {
+  if (user) {
+    const moderationRoles = getAllModerationRoles(msg.guild!.id).map(
+      (role) => role.roleId
+    );
+    return user.roles.cache.find((role) => moderationRoles.includes(role.id));
+  } else {
+    return undefined;
+  }
 }
 
 function clearChannel(channel: TextChannel, nbMessages: number) {
