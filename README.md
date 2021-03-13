@@ -1,6 +1,6 @@
 # Welcome to voice-chat-bot 👋
 
-![Version](https://img.shields.io/badge/version-0.1.2-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-0.2.0-blue.svg?cacheSeconds=2592000)
 [![Twitter: HaloCreation](https://img.shields.io/twitter/follow/HaloCreation.svg?style=social)](https://twitter.com/HaloCreation)
 
 > A Discord bot that lets your community manage their voice channels themselves
