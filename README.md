@@ -1,7 +1,7 @@
 # Welcome to voice-chat-bot 👋
 
 ![Version](https://img.shields.io/badge/version-0.1.2-blue.svg?cacheSeconds=2592000)
-[![Twitter: _Grenadator](https://img.shields.io/twitter/follow/_Grenadator.svg?style=social)](https://twitter.com/_Grenadator)
+[![Twitter: HaloCreation](https://img.shields.io/twitter/follow/HaloCreation.svg?style=social)](https://twitter.com/HaloCreation)
 
 > A Discord bot that lets your community manage their voice channels themselves
 
@@ -9,6 +9,12 @@
 
 This bot is here to let your community manage their voice channels on their own.<br/>
 Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel inside the category and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
+
+### Setup
+
+- If you never set up a Discord bot before, please follow the instructions over [here](https://discordapp.com/developers/docs/intro).
+- If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286338064&scope=bot
+- Once that is done, invite the bot to your server, and type `!voice setup` to start the installation wizard. Please refer to [this part](#admin-commands-list) to get the full list of setup commands.
 
 ### Permissions required
 
@@ -113,7 +119,7 @@ You guys are the best 😎
 
 Contributions, issues and feature requests are welcome!
 
-Feel free to check [issues page](https://github.com/Grenadator/voice-chat-bot/issues).
+Feel free to check [issues page](https://github.com/Halocrea/voice-chat-bot/issues).
 
 ## Show your support
 
