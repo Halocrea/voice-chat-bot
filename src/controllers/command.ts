@@ -40,7 +40,8 @@ export async function handleCommand(
       if (
         userId === msg.author.id ||
         (process.env.MAINTAINER_ID &&
-          process.env.MAINTAINER_ID === msg.author.id)
+          process.env.MAINTAINER_ID === msg.author.id) ||
+        msg.member?.hasPermission('ADMINISTRATOR')
       ) {
         switch (cmd) {
           case 'name':
