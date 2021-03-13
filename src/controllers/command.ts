@@ -37,7 +37,11 @@ export async function handleCommand(
     const channel = msg.member?.voice.channel;
     if (channel) {
       const { userId } = getOwner(channel.id);
-      if (userId === msg.author.id) {
+      if (
+        userId === msg.author.id ||
+        (process.env.MAINTAINER_ID &&
+          process.env.MAINTAINER_ID === msg.author.id)
+      ) {
         switch (cmd) {
           case 'name':
             renameChannel(msg, channel, args);
