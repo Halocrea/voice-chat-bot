@@ -1,6 +1,7 @@
 import * as discord from 'discord.js';
 import * as dotenv from 'dotenv';
 import { handleCommand } from './controllers/command';
+import { handleModeration } from './controllers/handle-moderation';
 import { handleSetup } from './controllers/setup';
 import { handleVoiceEvent } from './controllers/voice-channel';
 import { getGuildSetup } from './models/GuildSetup';
@@ -39,6 +40,11 @@ voiceChatBot.on('message', (msg) => {
 
     if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
       handleSetup(voiceChatBot, guildSetup, msg, cmdPrefix, cmd, args);
+    } else if (
+      cmd?.match(/moderation/) &&
+      msg.member?.hasPermission('ADMINISTRATOR')
+    ) {
+      handleModeration(voiceChatBot, msg, cmd);
     } else if (guildSetup && cmd) {
       handleCommand(voiceChatBot, msg, cmd, args);
     } else if (!cmd) {
