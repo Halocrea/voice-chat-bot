@@ -86,6 +86,13 @@ Here are all the commands you can use:
 - `!voice setup-commands <commands_channel_id>`: Use this to let the bot know the text channel into which he will interact with users; they'll use its commands there, and he'll reply to them there as well. This text channel doesn't need to be into the voice category, but the bot must be able to read it and to send messages into it.
 - `!voice setup-clear`: When you run this command, you delete all the IDs the bot stored for your server. After running it, you can run `!voice setup` to set IDs up again.
 
+**Notice:** These commands below will help you handle moderation roles. A role added to the moderation can bypass voice channels ownership and can't be rejected from a channel (this is naturally the case for the administrators).
+
+- `!voice moderation-help`: Get commands list to handle roles.
+- `!voice add-moderation-role <@role>`: Add a role allowed to moderate the bot
+- `!voice list-moderation-role`: List all the roles allowed to moderate the bot
+- `!voice remove-moderation-role <@role>`: Remove a role no longer allowed to moderate the bot
+
 ### User commands list
 
 **Notice:** You must own the voice channel you're currently in to perform most of these actions (except for `!voice claim`).<br/>
