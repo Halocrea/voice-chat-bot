@@ -38,11 +38,16 @@ voiceChatBot.on('message', (msg) => {
     const cmd = cmdAndArgs.shift();
     const args = cmdAndArgs.join(' ').trim();
 
-    if (cmd?.match(/setup/) && msg.member?.hasPermission('ADMINISTRATOR')) {
+    if (
+      cmd?.match(/setup/) &&
+      (msg.member?.hasPermission('ADMINISTRATOR') ||
+        process.env.MAINTAINER_ID === msg.author.id)
+    ) {
       handleSetup(voiceChatBot, guildSetup, msg, cmdPrefix, cmd, args);
     } else if (
       cmd?.match(/moderation/) &&
-      msg.member?.hasPermission('ADMINISTRATOR')
+      (msg.member?.hasPermission('ADMINISTRATOR') ||
+        process.env.MAINTAINER_ID === msg.author.id)
     ) {
       handleModeration(voiceChatBot, msg, cmd);
     } else if (guildSetup && cmd) {
