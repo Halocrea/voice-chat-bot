@@ -92,7 +92,7 @@ export function handleSetup(
         msg.channel.send({
           embed: {
             title: `It looks like I'm already set up on your server`,
-            description: `If you want to edit my setup, please use the command \`${cmdPrefix} help-setup\` to get the setup commands.`,
+            description: `If you want to edit my setup, please use the command \`${cmdPrefix} setup-help\` to get the setup commands.`,
             color: 6465260,
             thumbnail: {
               url: voiceChatBot.user?.avatarURL(),
