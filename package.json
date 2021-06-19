@@ -8,9 +8,9 @@
     "start": "node ./build/index.js"
   },
   "dependencies": {
-    "@types/better-sqlite3": "^5.4.0",
+    "@types/better-sqlite3": "^5.4.1",
     "@types/ws": "^7.2.4",
-    "better-sqlite3": "^6.0.1",
+    "better-sqlite3": "^7.4.1",
     "discord.js": "^12.1.1",
     "dotenv": "^8.2.0"
   },
