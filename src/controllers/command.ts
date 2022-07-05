@@ -8,6 +8,7 @@ import {
   DiscordAPIError,
   OverwriteResolvable,
   Role,
+  MessageEmbed,
 } from 'discord.js';
 import { getOwner, editOwnership } from '../models/Ownership';
 import { getGuildSetup } from '../models/GuildSetup';
@@ -125,7 +126,7 @@ async function renameChannel(
       }!`
     );
   } catch (error) {
-    handleErrors(msg, error);
+    handleErrors(msg, error as DiscordAPIError);
   }
 }
 
@@ -244,7 +245,7 @@ async function lockChannel(
       }
     }
   } catch (error) {
-    handleErrors(msg, error);
+    handleErrors(msg, error as DiscordAPIError);
   }
 }
 
@@ -257,7 +258,7 @@ async function unlockChannel(msg: Message, channel: VoiceChannel) {
     );
     msg.channel.send('🔓 Channel **unlocked**');
   } catch (error) {
-    handleErrors(msg, error);
+    handleErrors(msg, error as DiscordAPIError);
   }
 }
 
@@ -310,7 +311,7 @@ async function permitUser(msg: Message, channel: VoiceChannel, args: string) {
       }, i * 25);
     });
   } catch (error) {
-    handleErrors(msg, error);
+    handleErrors(msg, error as DiscordAPIError);
   }
 }
 
@@ -350,7 +351,7 @@ async function rejectUser(msg: Message, channel: VoiceChannel, args: string) {
       clearChannel(msg.channel as TextChannel, 2);
     }
   } catch (error) {
-    handleErrors(msg, error);
+    handleErrors(msg, error as DiscordAPIError);
   }
 }
 
@@ -380,7 +381,7 @@ async function setUserChannelLimit(
         `✋ User limit set to **${+args > 0 ? args : 'unlimited'}**`
       );
     } catch (error) {
-      handleErrors(msg, error);
+      handleErrors(msg, error as DiscordAPIError);
     }
   } else {
     msg.channel.send(`Please send a value between **0** and **99**`);
@@ -429,61 +430,60 @@ async function setChannelBitrate(
       await channel.setBitrate(bitrate);
       msg.channel.send(`👂 Channel bitrate set to **${args}bps**`);
     } catch (error) {
-      handleErrors(msg, error);
+      handleErrors(msg, error as DiscordAPIError);
     }
   } else {
     msg.channel.send(`Please give a BPS value between 8000 and ${bitrateMax}.`);
   }
 }
 
-function generateHelpEmbed(voiceChatBot: Client, msg: Message) {
+function generateHelpEmbed(voiceChatBot: Client, msg: Message) : MessageEmbed {
   const guildSetup = getGuildSetup(msg.guild!.id);
   const cmdPrefix =
     guildSetup && guildSetup.prefix
       ? guildSetup.prefix
       : process.env.CMD_PREFIX;
-  return {
-    embed: {
-      author: {
-        name: voiceChatBot.user?.username,
-        icon_url: voiceChatBot.user?.avatarURL(),
-      },
-      title: 'Commands list',
-      description: `**Notice: ** You must own the voice channel you're currently in to perform most of these actions (except for \`${cmdPrefix} claim\`). \nHere are all the commands you can use:\n
-      **${cmdPrefix} name <channel_name>**
-      Rename your channel. \n
-
-      **${cmdPrefix} lock**
-      Lock your channel; nobody can join you unless you explicitely allow them to do so by using the \`${cmdPrefix} permit\` command (see hereafter). \n
-
-      **${cmdPrefix} permit <@someone/@role/username>**
-      Allow the given user or role to join your locked channel. \n
-
-      **${cmdPrefix} unlock**
-      Open your locked channel to everyone. \n
-
-      **${cmdPrefix} reject <@someone/username>**
-      Kick a user out of your channel. \n
-
-      **${cmdPrefix} claim**
-      Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.\n
-
-      **${cmdPrefix} limit <0 <= number <= 99>**
-      Set a user limit to your channel (Here 0 means **unlimited**).\n
-
-      **${cmdPrefix} bitrate <number>**
-      Set the channel's bitrate.`,
-      timestamp: new Date(),
-      image: {
-        url:
-          'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
-      },
-      color: 6465260,
-      thumbnail: {
-        url: voiceChatBot.user?.avatarURL(),
-      },
+  const embed = new MessageEmbed({
+    author: {
+      name: voiceChatBot.user?.username,
+      icon_url: voiceChatBot.user?.avatarURL() ?? undefined,
     },
-  };
+    title: 'Commands list',
+    description: `**Notice: ** You must own the voice channel you're currently in to perform most of these actions (except for \`${cmdPrefix} claim\`). \nHere are all the commands you can use:\n
+    **${cmdPrefix} name <channel_name>**
+    Rename your channel. \n
+
+    **${cmdPrefix} lock**
+    Lock your channel; nobody can join you unless you explicitely allow them to do so by using the \`${cmdPrefix} permit\` command (see hereafter). \n
+
+    **${cmdPrefix} permit <@someone/@role/username>**
+    Allow the given user or role to join your locked channel. \n
+
+    **${cmdPrefix} unlock**
+    Open your locked channel to everyone. \n
+
+    **${cmdPrefix} reject <@someone/username>**
+    Kick a user out of your channel. \n
+
+    **${cmdPrefix} claim**
+    Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.\n
+
+    **${cmdPrefix} limit <0 <= number <= 99>**
+    Set a user limit to your channel (Here 0 means **unlimited**).\n
+
+    **${cmdPrefix} bitrate <number>**
+    Set the channel's bitrate.`,
+    timestamp: new Date(),
+    image: {
+      url:
+        'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
+    },
+    color: 6465260,
+    thumbnail: {
+      url: voiceChatBot.user?.avatarURL() ?? undefined,
+    }
+  });
+  return embed;
 }
 
 async function findUserInGuildByName(guild: Guild, name: string) {

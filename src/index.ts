@@ -56,29 +56,28 @@ voiceChatBot.on('message', (msg) => {
       msg.channel.send(`Don't forget to use a command 😏`);
     } else {
       // The bot needs to be set up before being used
-      msg.channel.send({
-        embed: {
-          title: 'DENIED! Please set me up and configure me first.',
-          description: `Please ask an Administrator to configure me using the \`${process.env.CMD_PREFIX} setup\` command; I require a few additionnal info to get things to work ☹️`,
-          color: 16711680,
-          thumbnail: {
-            url: voiceChatBot.user?.avatarURL(),
-          },
-          image: {
-            url: 'https://i.imgur.com/ZIfiTGO.gif',
-          },
-          timestamp: new Date(),
-          author: {
-            name: voiceChatBot.user?.username,
-            icon_url: voiceChatBot.user?.avatarURL(),
-          },
+      const embed = new discord.MessageEmbed({
+        title: 'DENIED! Please set me up and configure me first.',
+        description: `Please ask an Administrator to configure me using the \`${process.env.CMD_PREFIX} setup\` command; I require a few additionnal info to get things to work ☹️`,
+        color: 16711680,
+        thumbnail: {
+          url: voiceChatBot.user?.avatarURL() ?? undefined,
         },
+        image: {
+          url: 'https://i.imgur.com/ZIfiTGO.gif',
+        },
+        timestamp: new Date(),
+        author: {
+          name: voiceChatBot.user?.username,
+          icon_url: voiceChatBot.user?.avatarURL() ?? undefined,
+        }
       });
+      msg.channel.send(embed);
     }
   }
 });
 
-voiceChatBot.on('voiceStateUpdate', async (oldState, newState) =>
+voiceChatBot.on('voiceStateUpdate', async (oldState: discord.VoiceState, newState: discord.VoiceState) =>
   handleVoiceEvent(oldState, newState)
 );
 
