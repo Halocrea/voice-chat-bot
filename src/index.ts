@@ -1,85 +1,70 @@
-import * as discord from 'discord.js';
+import {
+  ActivityType,
+  Client,
+  Events,
+  GatewayIntentBits,
+  MessageFlags,
+} from 'discord.js';
 import * as dotenv from 'dotenv';
-import { handleCommand } from './controllers/command';
-import { handleModeration } from './controllers/handle-moderation';
-import { handleSetup } from './controllers/setup';
+import { commands } from './commands';
 import { handleVoiceEvent } from './controllers/voice-channel';
-import { getGuildSetup } from './models/GuildSetup';
 
 dotenv.config();
-const voiceChatBot = new discord.Client({
-  ws: {
-    intents: [
-      'GUILDS',
-      'GUILD_MESSAGES',
-      'GUILD_MESSAGE_REACTIONS',
-      'GUILD_VOICE_STATES',
-    ],
-  },
+
+// A throwing handler used to take the whole process down: since Node 15 an
+// unhandled rejection is fatal, and a restart policy just fed the bot back into
+// the same error. Logging beats dying for an error we already know how to skip.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
 });
 
-voiceChatBot.on('ready', () => {
-  voiceChatBot.user?.setActivity(`Made with ❤️`, {
-    type: 'LISTENING',
-  });
+const registry = new Map(
+  commands.map((command) => [command.data.name, command]),
+);
+
+// Slash commands need no privileged intent: dropping the prefixed commands took
+// MessageContent, GuildMessages and GuildMessageReactions with them.
+const voiceChatBot = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-voiceChatBot.on('message', (msg) => {
-  if (!msg.guild) return;
+voiceChatBot.on(Events.ClientReady, (client) => {
+  client.user.setActivity(`Made with ❤️`, { type: ActivityType.Listening });
+  console.log(`Logged in as ${client.user.tag}`);
+});
 
-  // We get the local setup
-  const guildSetup = getGuildSetup(msg.guild!.id);
-  const cmdPrefix =
-    guildSetup && guildSetup.prefix
-      ? guildSetup.prefix
-      : process.env.CMD_PREFIX;
-  if (cmdPrefix && msg.content.startsWith(cmdPrefix)) {
-    const cmdAndArgs = msg.content.replace(cmdPrefix, '').trim().split(' ');
-    const cmd = cmdAndArgs.shift();
-    const args = cmdAndArgs.join(' ').trim();
+voiceChatBot.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-    if (
-      cmd?.match(/setup/) &&
-      (msg.member?.hasPermission('ADMINISTRATOR') ||
-        process.env.MAINTAINER_ID === msg.author.id)
-    ) {
-      handleSetup(voiceChatBot, guildSetup, msg, cmdPrefix, cmd, args);
-    } else if (
-      cmd?.match(/moderation/) &&
-      (msg.member?.hasPermission('ADMINISTRATOR') ||
-        process.env.MAINTAINER_ID === msg.author.id)
-    ) {
-      handleModeration(voiceChatBot, msg, cmd);
-    } else if (guildSetup && cmd) {
-      handleCommand(voiceChatBot, msg, cmd, args);
-    } else if (!cmd) {
-      msg.channel.send(`Don't forget to use a command 😏`);
-    } else {
-      // The bot needs to be set up before being used
-      msg.channel.send({
-        embed: {
-          title: 'DENIED! Please set me up and configure me first.',
-          description: `Please ask an Administrator to configure me using the \`${process.env.CMD_PREFIX} setup\` command; I require a few additionnal info to get things to work ☹️`,
-          color: 16711680,
-          thumbnail: {
-            url: voiceChatBot.user?.avatarURL(),
-          },
-          image: {
-            url: 'https://i.imgur.com/ZIfiTGO.gif',
-          },
-          timestamp: new Date(),
-          author: {
-            name: voiceChatBot.user?.username,
-            icon_url: voiceChatBot.user?.avatarURL(),
-          },
-        },
-      });
-    }
+  if (!interaction.inCachedGuild()) {
+    await interaction.reply({
+      content: 'These commands only work on a server.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const command = registry.get(interaction.commandName);
+  if (!command) return;
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    // Commands handle their own errors; this is the last resort so that a bug
+    // never escapes as an unhandled rejection
+    console.error(error);
   }
 });
 
-voiceChatBot.on('voiceStateUpdate', async (oldState, newState) =>
-  handleVoiceEvent(oldState, newState)
-);
+voiceChatBot.on(Events.VoiceStateUpdate, (oldState, newState) => {
+  try {
+    handleVoiceEvent(oldState, newState);
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 voiceChatBot.login(process.env.TOKEN);

@@ -14,9 +14,11 @@ export interface Ownership {
   ownedChannelId: string;
 }
 
-export function getOwner(ownedChannelId: string) {
+export function getOwner(
+  ownedChannelId: string,
+): { userId: string } | undefined {
   const owner = 'SELECT userId FROM ownership WHERE ownedChannelId = ?';
-  return db.prepare(owner).get(ownedChannelId);
+  return db.prepare<[string], { userId: string }>(owner).get(ownedChannelId);
 }
 
 export function addOwnership(ownership: Ownership) {

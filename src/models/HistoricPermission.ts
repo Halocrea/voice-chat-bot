@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 const db = new Database(
-  path.join(__dirname, '../../saves/historic_permission.db')
+  path.join(__dirname, '../../saves/historic_permission.db'),
 );
 
 const createHistoricPermission = `CREATE TABLE IF NOT EXISTS historic_permission (
@@ -17,11 +17,13 @@ export interface HistoricPermission {
 }
 
 export function getAllHistoricPermissions(
-  userId: string
+  userId: string,
 ): { permittedUserId: string }[] {
   const historicPermissions =
     'SELECT permittedUserId FROM historic_permission WHERE userId = ?';
-  return db.prepare(historicPermissions).all(userId);
+  return db
+    .prepare<[string], { permittedUserId: string }>(historicPermissions)
+    .all(userId);
 }
 
 export function addHistoricPermission(historicPermission: HistoricPermission) {
@@ -31,7 +33,7 @@ export function addHistoricPermission(historicPermission: HistoricPermission) {
 }
 
 export function deleteOneHistoricPermission(
-  historicPermission: HistoricPermission
+  historicPermission: HistoricPermission,
 ) {
   const deleteHistoricPermission =
     'DELETE FROM historic_permission WHERE userId = ? AND permittedUserId = ?';
