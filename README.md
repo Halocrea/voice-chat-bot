@@ -14,7 +14,7 @@ Basically, by joining a specified permanent voice channel living inside a specif
 
 - If you never set up a Discord bot before, please follow the instructions over [here](https://discordapp.com/developers/docs/intro).
 - If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286338064&scope=bot
-- Once that is done, invite the bot to your server, and type `!voice setup` to start the installation wizard. Please refer to [this part](#admin-commands-list) to get the full list of setup commands.
+- Once that is done, invite the bot to your server, and run `/voice-setup auto` to let it create everything it needs. Please refer to [this part](#admin-commands-list) to get the full list of setup commands.
 
 ### Permissions required
 
@@ -35,6 +35,20 @@ In order to work properly, this bot will need this set of permissions globally a
 
 ```sh
 cp sample.env .env
+```
+
+`TOKEN` and `CLIENT_ID` come from your application on the [Discord developer portal](https://discord.com/developers/applications).
+Setting `DEV_GUILD_ID` deploys the commands to that single server, where they appear instantly — leave it empty to deploy globally, which can take up to an hour.
+
+This bot requires **no privileged intent**: everything goes through slash commands, so `MESSAGE CONTENT` can stay off.
+
+### Deploy the slash commands
+
+Commands have to be registered with Discord once, and again whenever they change:
+
+```sh
+npm run build
+npm run deploy
 ```
 
 ### Install and run with Docker
@@ -72,40 +86,39 @@ npm start
 
 ## Commands list
 
+Every answer the bot gives is **ephemeral**: only the person who ran the command sees it, so nothing clutters your channels.
+
 ### Admin commands list
 
-**Notice:** You must be an administrator of your server to run those commands. They'll help set the bot up on your server properly.<br/>
-Here are all the commands you can use:
+**Notice:** These commands are reserved to administrators by Discord itself. You can hand them to specific roles from _Server Settings > Integrations_.
 
-- `!voice setup`: Set the bot up on your server.
-- `!voice setup-help`: Get setup commands list on Discord.
-- `!voice setup-prefix <cmd_prefix>`: Replace `!voice` with your own prefix.
-- `!voice setup-category <category_id>`: Use this to give the bot the category **ID** into which he will operate (create and manage voice channels).<br/>
-  Keep in mind that he will create and manage channels inside this category. The bot will also require a permanent voice channel, that you can set the **ID** up using the following command.
-- `!voice setup-voice <creating_voice_channel_id>`: Use this to let the bot know the permanent voice channel living inside the voice category. Whenever someone joins this channel, the bot will generate another voice channel and move them inside it.
-- `!voice setup-commands <commands_channel_id>`: Use this to let the bot know the text channel into which he will interact with users; they'll use its commands there, and he'll reply to them there as well. This text channel doesn't need to be into the voice category, but the bot must be able to read it and to send messages into it.
-- `!voice setup-clear`: When you run this command, you delete all the IDs the bot stored for your server. After running it, you can run `!voice setup` to set IDs up again.
+- `/voice-setup auto`: Let the bot create the category and the voice channel it needs, then save the whole configuration.
+- `/voice-setup category <category>`: Pick the category the bot will operate in (create and manage voice channels).
+- `/voice-setup voice <channel>`: Pick the permanent voice channel. Whenever someone joins it, the bot generates another voice channel and moves them inside it.
+- `/voice-setup show`: Show the current configuration.
+- `/voice-setup clear`: Delete everything the bot stored for your server.
 
 **Notice:** These commands below will help you handle moderation roles. A role added to the moderation can bypass voice channels ownership and can't be rejected from a channel (this is naturally the case for the administrators).
 
-- `!voice moderation-help`: Get commands list to handle roles.
-- `!voice add-moderation-role <@role>`: Add a role allowed to moderate the bot
-- `!voice list-moderation-role`: List all the roles allowed to moderate the bot
-- `!voice remove-moderation-role <@role>`: Remove a role no longer allowed to moderate the bot
+- `/voice-mod add <role>`: Add a role allowed to moderate the bot
+- `/voice-mod list`: List all the roles allowed to moderate the bot
+- `/voice-mod remove <role>`: Remove a role no longer allowed to moderate the bot
 
 ### User commands list
 
-**Notice:** You must own the voice channel you're currently in to perform most of these actions (except for `!voice claim`).<br/>
+**Notice:** You must own the voice channel you're currently in to perform most of these actions (except for `/voice claim`).<br/>
 Here are all the commands you can use:
 
-- `!voice help`: Get commands list on Discord.
-- `!voice lock`: Lock your channel; nobody can join you unless you explicitely allow them to do so by using the `!voice permit` command (see hereafter).
-- `!voice permit <@someone/@role/username>`: Allow the given user or role to join your locked channel.
-- `!voice unlock`: Open your locked channel to everyone.
-- `!voice reject <@someone/username>`: Kick a user out of your channel.
-- `!voice claim`: Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.
-- `!voice limit <0 <= number <= 99>`: Set a user limit to your channel (Here 0 means **unlimited**).
-- `!voice bitrate <number>`: Set the channel's bitrate.
+- `/voice name <name>`: Rename your channel.
+- `/voice lock`: Lock your channel; nobody can join you unless you explicitely allow them to do so by using the `/voice permit` command (see hereafter). If the bot remembers who you allowed in your previous channel, it offers to restore those permissions.
+- `/voice permit <target>`: Allow the given member or role to join your locked channel.
+- `/voice unlock`: Open your locked channel to everyone.
+- `/voice reject <member>`: Kick a member out of your channel.
+- `/voice claim`: Request ownership of the voice channel you're currently into. This action can be performed only if the channel's previous owner left.
+- `/voice limit <count>`: Set a user limit to your channel (Here 0 means **unlimited**).
+- `/voice bitrate <bitrate>`: Set the channel's bitrate, in bits per second.
+
+There is no `help` command anymore: Discord shows every command and its description as you type `/`.
 
 ## Author
 

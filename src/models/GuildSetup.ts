@@ -5,19 +5,29 @@ const db = new Database(path.join(__dirname, '../../saves/guild_setup.db'));
 
 const createSetupGuild = `CREATE TABLE IF NOT EXISTS guild_setup (
   guildId VARCHAR(30) PRIMARY KEY,
-  prefix VARCHAR(15),
   categoryId VARCHAR(30),
-  creatingChannelId VARCHAR(30),
-  commandsChannelId VARCHAR(30)
+  creatingChannelId VARCHAR(30)
 );`;
 db.exec(createSetupGuild);
 
+// Slash commands made both the custom prefix and the dedicated commands channel
+// pointless, so we drop those columns from databases created before the switch.
+// SQLite supports DROP COLUMN since 3.35, and we ship a much newer engine.
+const columns = db
+  .prepare<[], { name: string }>(`PRAGMA table_info(guild_setup)`)
+  .all()
+  .map((column) => column.name);
+for (const obsolete of ['prefix', 'commandsChannelId']) {
+  if (columns.includes(obsolete)) {
+    db.exec(`ALTER TABLE guild_setup DROP COLUMN ${obsolete}`);
+  }
+}
+
 export interface GuildSetup {
   guildId: string;
-  prefix: string;
-  categoryId: string;
-  creatingChannelId: string;
-  commandsChannelId: string;
+  // Both stay null until an administrator completes the setup
+  categoryId: string | null;
+  creatingChannelId: string | null;
 }
 
 export function getGuildSetup(guildId: string): GuildSetup | undefined {
@@ -25,44 +35,41 @@ export function getGuildSetup(guildId: string): GuildSetup | undefined {
   return db.prepare<[string], GuildSetup>(guildSetup).get(guildId);
 }
 
-export function addGuildSetup(guildSetup: GuildSetup) {
-  const newGuildSetup =
-    'INSERT INTO guild_setup (guildId, prefix, categoryId, creatingChannelId, commandsChannelId) VALUES (@guildId, @prefix, @categoryId, @creatingChannelId, @commandsChannelId)';
-  return db.prepare(newGuildSetup).run(guildSetup);
+/** A setup an administrator has seen through to the end */
+export type CompleteGuildSetup = GuildSetup & {
+  categoryId: string;
+  creatingChannelId: string;
+};
+
+/** True once the bot has everything it needs to manage channels on that guild */
+export function isSetupComplete(
+  guildSetup: GuildSetup | undefined,
+): guildSetup is CompleteGuildSetup {
+  return !!guildSetup?.categoryId && !!guildSetup.creatingChannelId;
 }
 
-export function addGuildSetupId(guildId: string) {
-  const newGuildSetup = 'INSERT INTO guild_setup (guildId) VALUES (@guildId)';
-  db.prepare(newGuildSetup).run({ guildId });
+export function setGuildSetup(guildSetup: GuildSetup) {
+  const upsert = `INSERT INTO guild_setup (guildId, categoryId, creatingChannelId)
+    VALUES (@guildId, @categoryId, @creatingChannelId)
+    ON CONFLICT(guildId) DO UPDATE SET
+      categoryId = excluded.categoryId,
+      creatingChannelId = excluded.creatingChannelId`;
+  db.prepare(upsert).run(guildSetup);
 }
 
-export function editPrefix(guildId: string, prefix: string) {
-  const updatePrefix = 'UPDATE guild_setup SET prefix = ? WHERE guildId = ?';
-  db.prepare(updatePrefix).run([prefix, guildId]);
+export function setCategoryId(guildId: string, categoryId: string) {
+  const upsert = `INSERT INTO guild_setup (guildId, categoryId) VALUES (?, ?)
+    ON CONFLICT(guildId) DO UPDATE SET categoryId = excluded.categoryId`;
+  db.prepare(upsert).run(guildId, categoryId);
 }
 
-export function editCategoryId(guildId: string, categoryId: string) {
-  const updateCategoryId =
-    'UPDATE guild_setup SET categoryId = ? WHERE guildId = ?';
-  db.prepare(updateCategoryId).run([categoryId, guildId]);
-}
-
-export function editCreatingChannelId(
+export function setCreatingChannelId(
   guildId: string,
   creatingChannelId: string,
 ) {
-  const updateCreatingChannelId =
-    'UPDATE guild_setup SET creatingChannelId = ? WHERE guildId = ?';
-  db.prepare(updateCreatingChannelId).run([creatingChannelId, guildId]);
-}
-
-export function editCommandsChannelId(
-  guildId: string,
-  commandsChannelId: string,
-) {
-  const updateCommandsChannelId =
-    'UPDATE guild_setup SET commandsChannelId = ? WHERE guildId = ?';
-  db.prepare(updateCommandsChannelId).run([commandsChannelId, guildId]);
+  const upsert = `INSERT INTO guild_setup (guildId, creatingChannelId) VALUES (?, ?)
+    ON CONFLICT(guildId) DO UPDATE SET creatingChannelId = excluded.creatingChannelId`;
+  db.prepare(upsert).run(guildId, creatingChannelId);
 }
 
 export function deleteGuildSetup(guildId: string) {

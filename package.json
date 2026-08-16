@@ -9,6 +9,7 @@
     "dev": "tsc -w",
     "build": "tsc",
     "start": "node ./build/index.js",
+    "deploy": "node ./build/deploy-commands.js",
     "prepare": "husky || true"
   },
   "dependencies": {

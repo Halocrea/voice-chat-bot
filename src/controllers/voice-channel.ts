@@ -1,12 +1,19 @@
 import { ChannelType, VoiceState } from 'discord.js';
-import { GuildSetup, getGuildSetup } from '../models/GuildSetup';
+import {
+  CompleteGuildSetup,
+  getGuildSetup,
+  isSetupComplete,
+} from '../models/GuildSetup';
 import { getHistoric } from '../models/Historic';
 import { addOwnership, deleteOwnership } from '../models/Ownership';
 
 export function handleVoiceEvent(oldState: VoiceState, newState: VoiceState) {
   const guildSetup = getGuildSetup(newState.guild.id);
-  // Nothing to do on a guild that hasn't run the setup yet
-  if (!guildSetup) return;
+  // Nothing to do until an administrator has finished the setup. Checking the
+  // ids individually also matters: both are null on a half-configured guild,
+  // and `null === null` would make every disconnection look like a request for
+  // a brand new channel.
+  if (!isSetupComplete(guildSetup)) return;
 
   // Create a voice channel when a user join the "creating" channel
   if (newState.channelId === guildSetup.creatingChannelId) {
@@ -20,7 +27,7 @@ export function handleVoiceEvent(oldState: VoiceState, newState: VoiceState) {
 }
 
 async function createVoiceChannel(
-  guildSetup: GuildSetup,
+  guildSetup: CompleteGuildSetup,
   newState: VoiceState,
 ) {
   try {
@@ -51,22 +58,22 @@ async function createVoiceChannel(
 }
 
 async function deleteVoiceChannel(
-  guildSetup: GuildSetup,
+  guildSetup: CompleteGuildSetup,
   oldState: VoiceState,
   newState: VoiceState,
 ) {
-  const channelLeft = newState.guild.channels.resolve(oldState.channelId!);
-  if (
-    channelLeft?.isVoiceBased() &&
-    !channelLeft.members.size &&
-    channelLeft.parentId === guildSetup.categoryId &&
-    channelLeft.id !== guildSetup.creatingChannelId
-  ) {
-    try {
+  try {
+    const channelLeft = newState.guild.channels.resolve(oldState.channelId!);
+    if (
+      channelLeft?.isVoiceBased() &&
+      !channelLeft.members.size &&
+      channelLeft.parentId === guildSetup.categoryId &&
+      channelLeft.id !== guildSetup.creatingChannelId
+    ) {
       await channelLeft.delete('Channel empty');
       deleteOwnership(channelLeft.id);
-    } catch (error) {
-      console.error(error);
     }
+  } catch (error) {
+    console.error(error);
   }
 }
