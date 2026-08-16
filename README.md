@@ -1,6 +1,7 @@
 # Welcome to voice-chat-bot 👋
 
 ![Version](https://img.shields.io/badge/version-0.3.0-blue.svg?cacheSeconds=2592000)
+[![Discord](https://img.shields.io/badge/Discord-support-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/FxtBV5x)
 [![Twitter: HaloCreation](https://img.shields.io/twitter/follow/HaloCreation.svg?style=social)](https://twitter.com/HaloCreation)
 
 > A Discord bot that lets your community manage their voice channels themselves
@@ -137,6 +138,13 @@ There is no `help` command anymore: Discord shows every command and its descript
 - Thanks [@Aronild](https://twitter.com/AroniId) for your opinion and your wonderful gif on help commands
 
 You guys are the best 😎
+
+## Support
+
+Need a hand, hit a bug, or want to suggest a feature? Come talk to us on our
+Discord server, which hosts a support forum for all of our bots:
+
+**https://discord.gg/FxtBV5x**
 
 ## 🤝 Contributing
 
