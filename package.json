@@ -2,29 +2,26 @@
   "name": "voice-chat-bot",
   "version": "0.3.0",
   "main": "build/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "./node_modules/.bin/tsc -w",
-    "build": "./node_modules/.bin/tsc",
-    "start": "node ./build/index.js"
+    "dev": "tsc -w",
+    "build": "tsc",
+    "start": "node ./build/index.js",
+    "prepare": "husky || true"
   },
   "dependencies": {
-    "@types/better-sqlite3": "^5.4.0",
-    "@types/ws": "^7.2.4",
-    "better-sqlite3": "^6.0.1",
-    "discord.js": "^12.1.1",
-    "dotenv": "^8.2.0"
+    "better-sqlite3": "^13.0.3",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
-    "@types/node": "^13.11.1",
-    "husky": "^4.2.5",
-    "prettier": "^2.0.4",
-    "pretty-quick": "^2.0.1",
-    "tslint": "^6.1.1",
-    "typescript": "^3.8.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^24.13.3",
+    "husky": "^9.1.7",
+    "prettier": "^3.9.6",
+    "pretty-quick": "^4.2.2",
+    "typescript": "~5.9.3"
   }
 }
