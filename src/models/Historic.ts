@@ -16,9 +16,9 @@ export interface Historic {
   userLimit?: number;
 }
 
-export function getHistoric(userId: string): Historic {
+export function getHistoric(userId: string): Historic | undefined {
   const historic = 'SELECT * FROM historic WHERE userId = ?';
-  return db.prepare(historic).get(userId);
+  return db.prepare<[string], Historic>(historic).get(userId);
 }
 
 export function addHistoricName(historic: Historic) {

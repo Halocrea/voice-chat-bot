@@ -17,7 +17,7 @@ export interface ModerationRole {
 export function getAllModerationRoles(guildId: string): { roleId: string }[] {
   const moderationRoles =
     'SELECT roleId FROM moderation_role WHERE guildId = ?';
-  return db.prepare(moderationRoles).all(guildId);
+  return db.prepare<[string], { roleId: string }>(moderationRoles).all(guildId);
 }
 
 export function addModerationRole(moderationRole: ModerationRole) {

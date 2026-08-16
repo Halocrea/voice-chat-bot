@@ -15,11 +15,11 @@ dotenv.config();
 
 export function handleSetup(
   voiceChatBot: Client,
-  guildSetup: GuildSetup,
+  guildSetup: GuildSetup | undefined,
   msg: Message,
   cmdPrefix: string,
   cmd: string,
-  args: string
+  args: string,
 ) {
   const auto = '🤖';
   const manual = '⚙️';
@@ -51,7 +51,7 @@ export function handleSetup(
               max: 1,
               time: 2 * 60000,
               errors: ['time'],
-            }
+            },
           )
           .then((collected) => {
             const reaction = collected.first();
@@ -63,7 +63,7 @@ export function handleSetup(
           })
           .catch((error) => {
             setupMessage.channel.send(
-              `You didn't answer in time, but please don't forget to set me up 😭 You'll have to re-use the command again.`
+              `You didn't answer in time, but please don't forget to set me up 😭 You'll have to re-use the command again.`,
             );
             console.error(error);
           });
@@ -106,7 +106,7 @@ export function handleSetup(
 async function autoSetup(
   voiceChatBot: Client,
   cmdPrefix: string,
-  setupMessage: Message
+  setupMessage: Message,
 ) {
   const permissions: OverwriteResolvable[] = [
     {
@@ -126,11 +126,15 @@ async function autoSetup(
       {
         type: 'category',
         permissionOverwrites: permissions,
-      }
+      },
     );
     const voiceChannel = await setupMessage.guild?.channels.create(
       'Create a channel',
-      { type: 'voice', parent: category?.id, permissionOverwrites: permissions }
+      {
+        type: 'voice',
+        parent: category?.id,
+        permissionOverwrites: permissions,
+      },
     );
     const textChannel = await setupMessage.guild?.channels.create('Commands', {
       type: 'text',
@@ -154,7 +158,7 @@ async function autoSetup(
 function manualSetup(
   voiceChatBot: Client,
   cmdPrefix: string,
-  setupMessage: Message
+  setupMessage: Message,
 ) {
   addGuildSetupId(setupMessage.guild!.id);
   setupMessage.channel.send({
@@ -175,7 +179,7 @@ function setupPrefix(
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
-  args: string
+  args: string,
 ) {
   const initialized = !!guildSetup.prefix;
   editPrefix(guildSetup.guildId, args);
@@ -210,7 +214,7 @@ function setupCategory(
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
-  args: string
+  args: string,
 ) {
   const initialized = !!guildSetup.categoryId;
   editCategoryId(guildSetup.guildId, args);
@@ -237,7 +241,7 @@ function setupVoice(
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
-  args: string
+  args: string,
 ) {
   const initialized = !!guildSetup.creatingChannelId;
   editCreatingChannelId(guildSetup.guildId, args);
@@ -265,7 +269,7 @@ function setupCommands(
   voiceChatBot: Client,
   cmdPrefix: string,
   msg: Message,
-  args: string
+  args: string,
 ) {
   const initialized = !!guildSetup.commandsChannelId;
   editCommandsChannelId(guildSetup.guildId, args);
@@ -280,7 +284,7 @@ function clearSetup(
   guildSetup: GuildSetup,
   voiceChatBot: Client,
   cmdPrefix: string,
-  msg: Message
+  msg: Message,
 ) {
   deleteGuildSetup(guildSetup.guildId);
   msg.channel.send({
@@ -327,8 +331,7 @@ function helpSetup(voiceChatBot: Client, cmdPrefix: string, msg: Message) {
       When you run this command, you delete all the IDs I stored for your server. After running it, you can run \`${cmdPrefix} setup\` to set IDs up again.
       `,
       image: {
-        url:
-          'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
+        url: 'https://cdn.discordapp.com/attachments/681483039032999962/703017371215986688/LdB8ROR.gif',
       },
       color: 6465260,
       thumbnail: {
@@ -346,7 +349,7 @@ function helpSetup(voiceChatBot: Client, cmdPrefix: string, msg: Message) {
 function sendEmbedSetupCompleted(
   voiceChatBot: Client,
   cmdPrefix: string,
-  msg: Message
+  msg: Message,
 ) {
   msg.channel.send({
     embed: {

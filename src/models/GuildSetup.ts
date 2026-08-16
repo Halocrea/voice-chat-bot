@@ -20,9 +20,9 @@ export interface GuildSetup {
   commandsChannelId: string;
 }
 
-export function getGuildSetup(guildId: string): GuildSetup {
+export function getGuildSetup(guildId: string): GuildSetup | undefined {
   const guildSetup = 'SELECT * FROM guild_setup WHERE guildId = ?';
-  return db.prepare(guildSetup).get(guildId);
+  return db.prepare<[string], GuildSetup>(guildSetup).get(guildId);
 }
 
 export function addGuildSetup(guildSetup: GuildSetup) {
@@ -49,7 +49,7 @@ export function editCategoryId(guildId: string, categoryId: string) {
 
 export function editCreatingChannelId(
   guildId: string,
-  creatingChannelId: string
+  creatingChannelId: string,
 ) {
   const updateCreatingChannelId =
     'UPDATE guild_setup SET creatingChannelId = ? WHERE guildId = ?';
@@ -58,7 +58,7 @@ export function editCreatingChannelId(
 
 export function editCommandsChannelId(
   guildId: string,
-  commandsChannelId: string
+  commandsChannelId: string,
 ) {
   const updateCommandsChannelId =
     'UPDATE guild_setup SET commandsChannelId = ? WHERE guildId = ?';
