@@ -3,11 +3,10 @@ import {
   ChannelType,
   ChatInputCommandInteraction,
   EmbedBuilder,
-  OverwriteResolvable,
-  PermissionFlagsBits,
   SlashCommandBuilder,
   VoiceChannel,
 } from 'discord.js';
+import { canConfigureBot, missingBotPermissions } from '../lib/permissions';
 import { respond, respondWithError } from '../lib/replies';
 import {
   deleteGuildSetup,
@@ -20,9 +19,8 @@ import {
 export const data = new SlashCommandBuilder()
   .setName('voice-setup')
   .setDescription('Configure the bot on this server')
-  // Discord enforces this for us, and server admins can still hand the command
-  // to specific roles from Server Settings > Integrations
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  // No setDefaultMemberPermissions here on purpose: it is checked in code by
+  // canConfigureBot so that the maintainer keeps their bypass
   .addSubcommand((sub) =>
     sub
       .setName('auto')
@@ -64,6 +62,14 @@ export const data = new SlashCommandBuilder()
 export async function execute(
   interaction: ChatInputCommandInteraction<'cached'>,
 ) {
+  if (!canConfigureBot(interaction.member)) {
+    await respond(interaction, {
+      content:
+        'You must be an administrator of this server to configure me. 🛑',
+    });
+    return;
+  }
+
   try {
     switch (interaction.options.getSubcommand()) {
       case 'auto':
@@ -88,30 +94,41 @@ export async function execute(
 }
 
 async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
-  const permissionOverwrites: OverwriteResolvable[] = [
-    {
-      id: interaction.client.user.id,
-      allow: [
-        PermissionFlagsBits.ManageChannels,
-        PermissionFlagsBits.ManageRoles,
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.Connect,
-        PermissionFlagsBits.MoveMembers,
-      ],
-    },
-  ];
+  // Checked up front so a missing permission is named instead of surfacing as
+  // an opaque "Missing Permissions" from the channel creation call
+  const missing = missingBotPermissions(interaction.guild);
+  if (missing.length) {
+    await respond(interaction, {
+      content: `🛑 I can't do this, I'm missing the following permissions on this server:\n${missing
+        .map((permission) => `- **${permission}**`)
+        .join(
+          '\n',
+        )}\n\nGrant them to my role in _Server Settings > Roles_, or re-invite me with the link from the README.`,
+    });
+    return;
+  }
 
+  // The channels are created bare, then the overwrites are applied separately.
+  // Discord rejects a creation whose overwrites grant a permission the bot
+  // can't hand out, and the refusal is a bare 403 naming nothing. Splitting the
+  // two keeps the setup working even when pinning the permissions is refused.
   const category = await interaction.guild.channels.create({
     name: 'Voice channels',
     type: ChannelType.GuildCategory,
-    permissionOverwrites,
   });
-  const creatingChannel = await interaction.guild.channels.create({
-    name: 'Create a channel',
-    type: ChannelType.GuildVoice,
-    parent: category.id,
-    permissionOverwrites,
-  });
+
+  let creatingChannel: VoiceChannel;
+  try {
+    creatingChannel = await interaction.guild.channels.create({
+      name: 'Create a channel',
+      type: ChannelType.GuildVoice,
+      parent: category.id,
+    });
+  } catch (error) {
+    // Never leave a stray category behind on a half-finished setup
+    await category.delete('Voice Bot: setup failed').catch(() => undefined);
+    throw error;
+  }
 
   setGuildSetup({
     guildId: interaction.guildId,
@@ -119,7 +136,10 @@ async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
     creatingChannelId: creatingChannel.id,
   });
 
+  const warning = await pinOwnPermissions(interaction, category);
+
   await respond(interaction, {
+    content: warning ?? undefined,
     embeds: [
       describeSetup(
         interaction,
@@ -130,6 +150,40 @@ async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
       ),
     ],
   });
+}
+
+/**
+ * Writes the bot's own permissions onto the category so a later change to the
+ * server roles can't silently lock it out. Best effort: the bot already holds
+ * these permissions guild-wide, so a refusal here is worth a warning, not a
+ * failed setup.
+ */
+async function pinOwnPermissions(
+  interaction: ChatInputCommandInteraction<'cached'>,
+  category: CategoryChannel,
+): Promise<string | null> {
+  try {
+    // Manage Permissions is deliberately absent. Discord refuses to let a
+    // non-administrator bot grant *that* permission through an overwrite, even
+    // when it already holds it server-wide: handing out the right to hand out
+    // rights is the obvious escalation path, so it is guarded on purpose. The
+    // server-wide grant is all the bot needs to edit the overwrites of the
+    // channels it creates, so there is nothing to work around here.
+    await category.permissionOverwrites.edit(
+      interaction.client.user.id,
+      {
+        ManageChannels: true,
+        ViewChannel: true,
+        Connect: true,
+        MoveMembers: true,
+      },
+      { reason: 'Voice Bot: keeping my own access to the category I manage' },
+    );
+    return null;
+  } catch (error) {
+    console.error('Could not pin my own permissions on the category:', error);
+    return `⚠️ I couldn't pin my own permissions on the category, so make sure my role keeps them server-wide. Everything else is ready.`;
+  }
 }
 
 async function setCategory(interaction: ChatInputCommandInteraction<'cached'>) {

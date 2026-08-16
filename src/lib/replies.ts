@@ -38,6 +38,14 @@ export async function respondWithError(
   interaction: ChatInputCommandInteraction,
   error: unknown,
 ) {
+  // A one-line summary before the stack trace: which call failed, and why.
+  // "Missing Permissions" alone never says *what* Discord refused.
+  if (error instanceof DiscordAPIError) {
+    console.error(
+      `[${interaction.commandName} ${interaction.options.getSubcommand(false) ?? ''}] ` +
+        `Discord error ${error.code} (HTTP ${error.status}) on ${error.method} ${error.url} — ${error.message}`,
+    );
+  }
   console.error(error);
   try {
     await respond(interaction, { content: describeError(error) });

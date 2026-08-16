@@ -1,9 +1,9 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
-  PermissionFlagsBits,
   SlashCommandBuilder,
 } from 'discord.js';
+import { canConfigureBot } from '../lib/permissions';
 import { respond, respondWithError } from '../lib/replies';
 import {
   addModerationRole,
@@ -14,7 +14,8 @@ import {
 export const data = new SlashCommandBuilder()
   .setName('voice-mod')
   .setDescription('Choose which roles may moderate the voice channels')
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  // No setDefaultMemberPermissions here on purpose: it is checked in code by
+  // canConfigureBot so that the maintainer keeps their bypass
   .addSubcommand((sub) =>
     sub
       .setName('add')
@@ -44,6 +45,14 @@ export const data = new SlashCommandBuilder()
 export async function execute(
   interaction: ChatInputCommandInteraction<'cached'>,
 ) {
+  if (!canConfigureBot(interaction.member)) {
+    await respond(interaction, {
+      content:
+        'You must be an administrator of this server to change the moderation roles. 🛑',
+    });
+    return;
+  }
+
   try {
     switch (interaction.options.getSubcommand()) {
       case 'add':

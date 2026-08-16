@@ -13,7 +13,7 @@ Basically, by joining a specified permanent voice channel living inside a specif
 ### Setup
 
 - If you never set up a Discord bot before, please follow the instructions over [here](https://discordapp.com/developers/docs/intro).
-- If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286338064&scope=bot+applications.commands
+- If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286262288&scope=bot+applications.commands
 - **If you host your own instance**, its invite link must carry the `applications.commands` scope too, otherwise the slash commands never show up on the server.
 - Once that is done, invite the bot to your server, and run `/voice-setup auto` to let it create everything it needs. Please refer to [this part](#admin-commands-list) to get the full list of setup commands.
 
@@ -24,11 +24,12 @@ In order to work properly, this bot will need this set of permissions globally a
 - Manage Roles
 - Manage Channels
 - View Channels
-- Send Messages
-- Manage Messages
-- Read Message History
 - Connect
 - Move Members
+
+That is the permission integer `286262288`. Since every answer is now ephemeral, the bot no longer needs _Send Messages_, _Manage Messages_ nor _Read Message History_.
+
+**Careful:** Discord refuses to let a bot _grant_ a permission it doesn't hold itself. The bot writes those very permissions into the overwrites of the category it creates, so missing a single one makes `/voice-setup auto` fail with a bare `Missing Permissions`. Running the command tells you exactly which ones are missing.
 
 ## Install
 
@@ -91,7 +92,8 @@ Every answer the bot gives is **ephemeral**: only the person who ran the command
 
 ### Admin commands list
 
-**Notice:** These commands are reserved to administrators by Discord itself. You can hand them to specific roles from _Server Settings > Integrations_.
+**Notice:** You must be an administrator of your server to run those commands. They'll help set the bot up on your server properly.<br/>
+Here are all the commands you can use:
 
 - `/voice-setup auto`: Let the bot create the category and the voice channel it needs, then save the whole configuration.
 - `/voice-setup category <category>`: Pick the category the bot will operate in (create and manage voice channels).
