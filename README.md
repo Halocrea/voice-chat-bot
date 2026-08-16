@@ -13,7 +13,8 @@ Basically, by joining a specified permanent voice channel living inside a specif
 ### Setup
 
 - If you never set up a Discord bot before, please follow the instructions over [here](https://discordapp.com/developers/docs/intro).
-- If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286338064&scope=bot
+- If you don't want to host your own version of the bot but consume an existing instance of it, you can use the following invite link: https://discord.com/api/oauth2/authorize?client_id=700399848666562611&permissions=286338064&scope=bot+applications.commands
+- **If you host your own instance**, its invite link must carry the `applications.commands` scope too, otherwise the slash commands never show up on the server.
 - Once that is done, invite the bot to your server, and run `/voice-setup auto` to let it create everything it needs. Please refer to [this part](#admin-commands-list) to get the full list of setup commands.
 
 ### Permissions required
