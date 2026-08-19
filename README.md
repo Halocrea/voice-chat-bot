@@ -11,6 +11,8 @@
 This bot is here to let your community manage their voice channels on their own.<br/>
 Basically, by joining a specified permanent voice channel living inside a specified voice category, the bot will generate for the user a new voice channel inside the category and let him manage it by giving a full set of commands, and this voice channel will be deleted once empty.
 
+A server can host **as many sectors as it wants**: each sector is a category paired with its own trigger channel, so you can run a « Gaming » one next to a « Chat » one. Members' preferences (their channel name and user limit) are remembered per sector.
+
 ### Setup
 
 - If you never set up a Discord bot before, please follow the instructions over [here](https://discordapp.com/developers/docs/intro).
@@ -30,7 +32,9 @@ In order to work properly, this bot will need this set of permissions globally a
 
 That is the permission integer `286262288`. Since every answer is now ephemeral, the bot no longer needs _Send Messages_, _Manage Messages_ nor _Read Message History_.
 
-**Careful:** Discord refuses to let a bot _grant_ a permission it doesn't hold itself. The bot writes those very permissions into the overwrites of the category it creates, so missing a single one makes `/voice-setup auto` fail with a bare `Missing Permissions`. Running the command tells you exactly which ones are missing.
+**Careful:** Discord refuses to let a bot _grant_ a permission it doesn't hold itself, so `/voice-setup auto` checks all five before touching anything and names the ones it is missing.
+
+_Manage Roles_ is only ever needed **server-wide**. Discord will not let a non-administrator bot pin that particular permission onto a category. Handing out the right to hand out rights is a deliberate anti-escalation guard. That is expected, and no reason to grant the bot Administrator.
 
 ## Install
 
@@ -96,11 +100,11 @@ Every answer the bot gives is **ephemeral**: only the person who ran the command
 **Notice:** You must be an administrator of your server to run those commands. They'll help set the bot up on your server properly.<br/>
 Here are all the commands you can use:
 
-- `/voice-setup auto`: Let the bot create the category and the voice channel it needs, then save the whole configuration.
-- `/voice-setup category <category>`: Pick the category the bot will operate in (create and manage voice channels).
-- `/voice-setup voice <channel>`: Pick the permanent voice channel. Whenever someone joins it, the bot generates another voice channel and moves them inside it.
-- `/voice-setup show`: Show the current configuration.
-- `/voice-setup clear`: Delete everything the bot stored for your server.
+- `/voice-setup auto [name]`: Create a whole new sector, category and trigger channel included. Run it again to add another one.
+- `/voice-setup add <category> <channel>`: Turn an existing category and one of its voice channels into a sector. The channel has to live inside the category, and a category can only host one sector.
+- `/voice-setup list`: List every sector the bot manages on your server.
+- `/voice-setup remove <category>`: Stop managing that sector. The channels already there are left untouched.
+- `/voice-setup clear`: Forget every sector on your server.
 
 **Notice:** These commands below will help you handle moderation roles. A role added to the moderation can bypass voice channels ownership and can't be rejected from a channel (this is naturally the case for the administrators).
 
@@ -113,7 +117,7 @@ Here are all the commands you can use:
 **Notice:** You must own the voice channel you're currently in to perform most of these actions (except for `/voice claim`).<br/>
 Here are all the commands you can use:
 
-- `/voice name <name>`: Rename your channel.
+- `/voice name <name>`: Rename your channel. The bot remembers it for your next channel in that sector.
 - `/voice lock`: Lock your channel; nobody can join you unless you explicitely allow them to do so by using the `/voice permit` command (see hereafter). If the bot remembers who you allowed in your previous channel, it offers to restore those permissions.
 - `/voice permit <target>`: Allow the given member or role to join your locked channel.
 - `/voice unlock`: Open your locked channel to everyone.

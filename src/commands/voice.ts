@@ -179,8 +179,11 @@ async function renameChannel(
   const name = interaction.options.getString('name', true);
   const author = interaction.member.nickname ?? interaction.user.username;
 
-  // We keep this name in DB to reuse it on the user's next channel
-  setHistoricName(interaction.user.id, name);
+  // Remembered per sector, so the same member can keep a different name in
+  // each category. A channel outside any category has no sector to remember.
+  if (channel.parentId) {
+    setHistoricName(interaction.user.id, channel.parentId, name);
+  }
   await channel.edit({
     name,
     reason: `Voice Bot: Asked by its owner (${author})`,
@@ -398,7 +401,9 @@ async function setChannelLimit(
   // Discord already rejects anything outside 0-99 for us
   const count = interaction.options.getInteger('count', true);
 
-  setHistoricLimit(interaction.user.id, count);
+  if (channel.parentId) {
+    setHistoricLimit(interaction.user.id, channel.parentId, count);
+  }
   await channel.setUserLimit(
     count,
     `Voice Bot: Asked by its owner (${interaction.user.username})`,

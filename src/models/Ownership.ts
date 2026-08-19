@@ -1,13 +1,7 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { openDatabase } from './db';
+import { ownershipMigrations } from './migrations';
 
-const db = new Database(path.join(__dirname, '../../saves/ownership.db'));
-
-const createOwnership = `CREATE TABLE IF NOT EXISTS ownership (
-  ownedChannelId VARCHAR(30) PRIMARY KEY,
-  userId VARCHAR(30) NOT NULL
-);`;
-db.exec(createOwnership);
+const db = openDatabase('ownership.db', ownershipMigrations);
 
 export interface Ownership {
   userId: string;

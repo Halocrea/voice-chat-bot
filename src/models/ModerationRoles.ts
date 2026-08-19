@@ -1,13 +1,7 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { openDatabase } from './db';
+import { moderationRoleMigrations } from './migrations';
 
-const db = new Database(path.join(__dirname, '../../saves/moderation_role.db'));
-
-const createModerationRole = `CREATE TABLE IF NOT EXISTS moderation_role (
-  guildId VARCHAR(30) NOT NULL,
-  roleId VARCHAR(30) NOT NULL
-);`;
-db.exec(createModerationRole);
+const db = openDatabase('moderation_role.db', moderationRoleMigrations);
 
 export interface ModerationRole {
   guildId: string;
