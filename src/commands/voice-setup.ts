@@ -9,12 +9,12 @@ import {
 import { canConfigureBot, missingBotPermissions } from '../lib/permissions';
 import { respond, respondWithError } from '../lib/replies';
 import {
-  deleteGuildSetup,
-  getGuildSetup,
-  setCategoryId,
-  setCreatingChannelId,
-  setGuildSetup,
-} from '../models/GuildSetup';
+  addHub,
+  getHubInCategory,
+  getHubsForGuild,
+  removeAllHubs,
+  removeHubInCategory,
+} from '../models/VoiceHub';
 
 export const data = new SlashCommandBuilder()
   .setName('voice-setup')
@@ -24,24 +24,29 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName('auto')
-      .setDescription('Let me create the category and the channel I need'),
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName('category')
-      .setDescription('Tell me which category I should manage channels in')
-      .addChannelOption((option) =>
+      .setDescription(
+        'Create a new sector, category and trigger channel included',
+      )
+      .addStringOption((option) =>
         option
-          .setName('category')
-          .setDescription('The category I will work in')
-          .addChannelTypes(ChannelType.GuildCategory)
-          .setRequired(true),
+          .setName('name')
+          .setDescription('Name of the category to create')
+          .setMaxLength(100),
       ),
   )
   .addSubcommand((sub) =>
     sub
-      .setName('voice')
-      .setDescription('Tell me which voice channel creates new channels')
+      .setName('add')
+      .setDescription(
+        'Turn an existing category and voice channel into a sector',
+      )
+      .addChannelOption((option) =>
+        option
+          .setName('category')
+          .setDescription('The category I will manage channels in')
+          .addChannelTypes(ChannelType.GuildCategory)
+          .setRequired(true),
+      )
       .addChannelOption((option) =>
         option
           .setName('channel')
@@ -51,12 +56,22 @@ export const data = new SlashCommandBuilder()
       ),
   )
   .addSubcommand((sub) =>
-    sub.setName('show').setDescription('Show my current configuration'),
+    sub.setName('list').setDescription('List the sectors I manage here'),
   )
   .addSubcommand((sub) =>
     sub
-      .setName('clear')
-      .setDescription('Forget everything I know about this server'),
+      .setName('remove')
+      .setDescription('Stop managing a sector')
+      .addChannelOption((option) =>
+        option
+          .setName('category')
+          .setDescription('The category to stop managing')
+          .addChannelTypes(ChannelType.GuildCategory)
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((sub) =>
+    sub.setName('clear').setDescription('Forget every sector on this server'),
   );
 
 export async function execute(
@@ -75,17 +90,17 @@ export async function execute(
       case 'auto':
         await autoSetup(interaction);
         break;
-      case 'category':
-        await setCategory(interaction);
+      case 'add':
+        await addSector(interaction);
         break;
-      case 'voice':
-        await setCreatingChannel(interaction);
+      case 'list':
+        await listSectors(interaction);
         break;
-      case 'show':
-        await showSetup(interaction);
+      case 'remove':
+        await removeSector(interaction);
         break;
       case 'clear':
-        await clearSetup(interaction);
+        await clearSectors(interaction);
         break;
     }
   } catch (error) {
@@ -113,7 +128,7 @@ async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
   // can't hand out, and the refusal is a bare 403 naming nothing. Splitting the
   // two keeps the setup working even when pinning the permissions is refused.
   const category = await interaction.guild.channels.create({
-    name: 'Voice channels',
+    name: interaction.options.getString('name') ?? 'Voice channels',
     type: ChannelType.GuildCategory,
   });
 
@@ -130,7 +145,7 @@ async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
     throw error;
   }
 
-  setGuildSetup({
+  addHub({
     guildId: interaction.guildId,
     categoryId: category.id,
     creatingChannelId: creatingChannel.id,
@@ -140,15 +155,116 @@ async function autoSetup(interaction: ChatInputCommandInteraction<'cached'>) {
 
   await respond(interaction, {
     content: warning ?? undefined,
+    embeds: [describeSector(interaction, category, creatingChannel)],
+  });
+}
+
+async function addSector(interaction: ChatInputCommandInteraction<'cached'>) {
+  const category = interaction.options.getChannel('category', true);
+  const channel = interaction.options.getChannel('channel', true);
+
+  // A trigger channel belongs to its own sector.
+  if (channel.parentId !== category.id) {
+    await respond(interaction, {
+      content: `🛑 **${channel.name}** has to live inside **${category.name}** for me to use it as a trigger.`,
+    });
+    return;
+  }
+
+  // A sector is a category, so a category holds exactly one trigger
+  const existing = getHubInCategory(interaction.guildId, category.id);
+
+  // Re-declaring the exact same pair is legitimate, but saying "will now
+  // generate" would suggest something changed when nothing did
+  if (existing?.creatingChannelId === channel.id) {
+    await respond(interaction, {
+      content: `ℹ️ That's already how **${category.name}** works — ${channel} generates its channels. Nothing to change.`,
+    });
+    return;
+  }
+
+  if (existing) {
+    const current = interaction.guild.channels.resolve(
+      existing.creatingChannelId,
+    );
+    await respond(interaction, {
+      content: `🛑 **${category.name}** already generates channels from ${
+        current ?? 'a channel that has since been deleted'
+      }. Run \`/voice-setup remove\` on it first, or pick another category.`,
+    });
+    return;
+  }
+
+  addHub({
+    guildId: interaction.guildId,
+    categoryId: category.id,
+    creatingChannelId: channel.id,
+  });
+
+  await respond(interaction, {
+    content: `✅ Joining ${channel} will now generate a new voice channel inside **${category.name}**.`,
+  });
+}
+
+async function listSectors(interaction: ChatInputCommandInteraction<'cached'>) {
+  const hubs = getHubsForGuild(interaction.guildId);
+
+  if (!hubs.length) {
+    await respond(interaction, {
+      content: `I don't manage any sector on this server yet. Run \`/voice-setup auto\` and I'll create one.`,
+    });
+    return;
+  }
+
+  const lines = hubs.map((hub) => {
+    const category = interaction.guild.channels.resolve(hub.categoryId);
+    const creatingChannel = interaction.guild.channels.resolve(
+      hub.creatingChannelId,
+    );
+    const categoryLabel = category
+      ? `**${category.name}**`
+      : '⚠️ deleted category';
+    const channelLabel = creatingChannel
+      ? `${creatingChannel}`
+      : '⚠️ deleted channel';
+    return `- ${categoryLabel} — triggered by ${channelLabel}`;
+  });
+
+  await respond(interaction, {
     embeds: [
-      describeSetup(
-        interaction,
-        'All set! 🎉',
-        category,
-        creatingChannel,
-        6465260,
-      ),
+      new EmbedBuilder()
+        .setTitle(
+          `${hubs.length} sector${hubs.length > 1 ? 's' : ''} on this server`,
+        )
+        .setDescription(lines.join('\n'))
+        .setColor(6465260)
+        .setTimestamp(new Date()),
     ],
+  });
+}
+
+async function removeSector(
+  interaction: ChatInputCommandInteraction<'cached'>,
+) {
+  const category = interaction.options.getChannel('category', true);
+  const removed = removeHubInCategory(interaction.guildId, category.id);
+
+  await respond(interaction, {
+    content: removed
+      ? `🧹 I no longer manage **${category.name}**. The channels already there are left untouched.`
+      : `I wasn't managing **${category.name}** in the first place.`,
+  });
+}
+
+async function clearSectors(
+  interaction: ChatInputCommandInteraction<'cached'>,
+) {
+  const removed = removeAllHubs(interaction.guildId);
+
+  await respond(interaction, {
+    content: removed
+      ? `🧹 Done, I forgot all ${removed} sector${removed > 1 ? 's' : ''} on this server. Run \`/voice-setup auto\` whenever you want to start over.`
+      : `There was nothing to forget on this server.`,
   });
 }
 
@@ -186,84 +302,21 @@ async function pinOwnPermissions(
   }
 }
 
-async function setCategory(interaction: ChatInputCommandInteraction<'cached'>) {
-  const category = interaction.options.getChannel('category', true);
-  setCategoryId(interaction.guildId, category.id);
-  await respond(interaction, {
-    content: `✅ I will manage voice channels inside **${category.name}**.\nDon't forget \`/voice-setup voice\` if you haven't set it yet.`,
-  });
-}
-
-async function setCreatingChannel(
+function describeSector(
   interaction: ChatInputCommandInteraction<'cached'>,
-) {
-  const channel = interaction.options.getChannel('channel', true);
-  setCreatingChannelId(interaction.guildId, channel.id);
-  await respond(interaction, {
-    content: `✅ Joining **${channel.name}** will now generate a new voice channel.`,
-  });
-}
-
-async function showSetup(interaction: ChatInputCommandInteraction<'cached'>) {
-  const guildSetup = getGuildSetup(interaction.guildId);
-  if (!guildSetup) {
-    await respond(interaction, {
-      content: `I'm not configured on this server yet. Run \`/voice-setup auto\` and I'll take care of everything.`,
-    });
-    return;
-  }
-
-  const category = guildSetup.categoryId
-    ? interaction.guild.channels.resolve(guildSetup.categoryId)
-    : null;
-  const creatingChannel = guildSetup.creatingChannelId
-    ? interaction.guild.channels.resolve(guildSetup.creatingChannelId)
-    : null;
-
-  await respond(interaction, {
-    embeds: [
-      new EmbedBuilder()
-        .setTitle('My current configuration')
-        .setColor(6465260)
-        .addFields(
-          {
-            name: 'Category',
-            value: category ? `${category}` : '❌ not set',
-          },
-          {
-            name: 'Channel that creates channels',
-            value: creatingChannel ? `${creatingChannel}` : '❌ not set',
-          },
-        )
-        .setTimestamp(new Date()),
-    ],
-  });
-}
-
-async function clearSetup(interaction: ChatInputCommandInteraction<'cached'>) {
-  deleteGuildSetup(interaction.guildId);
-  await respond(interaction, {
-    content: `🧹 Done, I forgot everything about this server. Run \`/voice-setup auto\` whenever you want to start over.`,
-  });
-}
-
-function describeSetup(
-  interaction: ChatInputCommandInteraction<'cached'>,
-  title: string,
   category: CategoryChannel,
   creatingChannel: VoiceChannel,
-  color: number,
 ) {
   return new EmbedBuilder()
-    .setTitle(title)
+    .setTitle('Sector ready! 🎉')
     .setDescription(
-      `Your members can now join ${creatingChannel} to get their own voice channel, which I'll delete once it's empty.\n\nUse \`/voice\` to see everything they can do with it.`,
+      `Your members can now join ${creatingChannel} to get their own voice channel, which I'll delete once it's empty.\n\nRun \`/voice-setup auto\` again to add another sector, or \`/voice-setup list\` to see them all.`,
     )
     .addFields(
       { name: 'Category', value: `${category}` },
       { name: 'Channel that creates channels', value: `${creatingChannel}` },
     )
-    .setColor(color)
+    .setColor(6465260)
     .setThumbnail(interaction.client.user.avatarURL())
     .setTimestamp(new Date());
 }

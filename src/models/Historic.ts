@@ -1,34 +1,44 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { openDatabase } from './db';
+import { historicMigrations } from './migrations';
 
-const db = new Database(path.join(__dirname, '../../saves/historic.db'));
-
-const createHistoric = `CREATE TABLE IF NOT EXISTS historic (
-  userId VARCHAR(30) PRIMARY KEY,
-  channelName VARCHAR(255),
-  userLimit TINYINT(2)
-);`;
-db.exec(createHistoric);
+const db = openDatabase('historic.db', historicMigrations);
 
 export interface Historic {
   userId: string;
+  categoryId: string;
   channelName?: string;
   userLimit?: number;
 }
 
-export function getHistoric(userId: string): Historic | undefined {
-  const historic = 'SELECT * FROM historic WHERE userId = ?';
-  return db.prepare<[string], Historic>(historic).get(userId);
+export function getHistoric(
+  userId: string,
+  categoryId: string,
+): Historic | undefined {
+  return db
+    .prepare<[string, string], Historic>(
+      'SELECT * FROM historic WHERE userId = ? AND categoryId = ?',
+    )
+    .get(userId, categoryId);
 }
 
-export function setHistoricName(userId: string, channelName: string) {
-  const upsert = `INSERT INTO historic (userId, channelName) VALUES (?, ?)
-    ON CONFLICT(userId) DO UPDATE SET channelName = excluded.channelName`;
-  db.prepare(upsert).run(userId, channelName);
+export function setHistoricName(
+  userId: string,
+  categoryId: string,
+  channelName: string,
+) {
+  const upsert = `INSERT INTO historic (userId, categoryId, channelName)
+    VALUES (?, ?, ?)
+    ON CONFLICT(userId, categoryId) DO UPDATE SET channelName = excluded.channelName`;
+  db.prepare(upsert).run(userId, categoryId, channelName);
 }
 
-export function setHistoricLimit(userId: string, userLimit: number) {
-  const upsert = `INSERT INTO historic (userId, userLimit) VALUES (?, ?)
-    ON CONFLICT(userId) DO UPDATE SET userLimit = excluded.userLimit`;
-  db.prepare(upsert).run(userId, userLimit);
+export function setHistoricLimit(
+  userId: string,
+  categoryId: string,
+  userLimit: number,
+) {
+  const upsert = `INSERT INTO historic (userId, categoryId, userLimit)
+    VALUES (?, ?, ?)
+    ON CONFLICT(userId, categoryId) DO UPDATE SET userLimit = excluded.userLimit`;
+  db.prepare(upsert).run(userId, categoryId, userLimit);
 }

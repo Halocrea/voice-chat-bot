@@ -1,15 +1,7 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { openDatabase } from './db';
+import { historicPermissionMigrations } from './migrations';
 
-const db = new Database(
-  path.join(__dirname, '../../saves/historic_permission.db'),
-);
-
-const createHistoricPermission = `CREATE TABLE IF NOT EXISTS historic_permission (
-  userId VARCHAR(30) NOT NULL,
-  permittedUserId VARCHAR(30) NOT NULL
-);`;
-db.exec(createHistoricPermission);
+const db = openDatabase('historic_permission.db', historicPermissionMigrations);
 
 export interface HistoricPermission {
   userId: string;
