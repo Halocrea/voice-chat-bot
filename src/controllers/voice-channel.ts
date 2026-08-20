@@ -1,4 +1,5 @@
 import { ChannelType, VoiceState } from 'discord.js';
+import { describeThrown, levelFor, logger } from '../lib/logger';
 import { getHistoric } from '../models/Historic';
 import { addOwnership, deleteOwnership } from '../models/Ownership';
 import {
@@ -47,7 +48,11 @@ async function createVoiceChannel(hub: VoiceHub, newState: VoiceState) {
       ownedChannelId: newChannel.id,
     });
   } catch (error) {
-    console.error(error);
+    logger.log(levelFor(error), 'Could not create a voice channel', {
+      err: describeThrown(error),
+      guildId: newState.guild.id,
+      categoryId: hub.categoryId,
+    });
   }
 }
 
@@ -66,6 +71,10 @@ async function deleteVoiceChannel(oldState: VoiceState, newState: VoiceState) {
       deleteOwnership(channelLeft.id);
     }
   } catch (error) {
-    console.error(error);
+    logger.log(levelFor(error), 'Could not delete an empty voice channel', {
+      err: describeThrown(error),
+      guildId: newState.guild.id,
+      channelId: oldState.channelId,
+    });
   }
 }

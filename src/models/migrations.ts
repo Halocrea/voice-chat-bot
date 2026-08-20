@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { columnsOf, Migration } from './db';
 
 /**
@@ -58,7 +59,7 @@ export const guildSetupMigrations: Migration[] = [
         )
         .get()?.count ?? 0;
 
-    console.log(
+    logger.info(
       `[db] guild_setup -> voice_hub: ${migrated} hub(s) migrated, ` +
         `${skipped} incomplete setup(s) skipped`,
     );
@@ -82,7 +83,7 @@ export const guildSetupMigrations: Migration[] = [
       .run().changes;
 
     if (duplicates) {
-      console.log(
+      logger.info(
         `[db] voice_hub: ${duplicates} duplicate hub(s) dropped, ` +
           `one trigger channel kept per category`,
       );
