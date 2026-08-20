@@ -12,8 +12,8 @@ const DEFAULT_INTERVAL_MINUTES = 5;
  * machine entirely.
  *
  * The bot pushes rather than being polled, deliberately: an inbound health
- * check would need a port opened through the home router the Raspberry Pi sits
- * behind. An outbound call crosses NAT with nothing to configure.
+ * check would need a reachable address and an open port, which a self-hosted
+ * instance behind NAT rarely has. An outbound call needs neither.
  *
  * @returns a function to stop beating
  */

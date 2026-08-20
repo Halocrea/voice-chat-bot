@@ -81,9 +81,10 @@ const consoleFormat = combine(
 /**
  * The application logger.
  *
- * Nothing writes to a file here on purpose: the bot runs under pm2, which
- * already captures stdout and stderr and rotates them. A second writer would
- * only double the wear on the Raspberry Pi's SD card.
+ * Nothing writes to a file here on purpose. Process managers already capture
+ * stdout and stderr and rotate them, so persisting logs belongs to whichever
+ * one is running the bot; doing it again from in here would duplicate the work
+ * and, on flash storage, the wear that comes with it.
  *
  * Levels are chosen by asking "does a human have to act, and which one?":
  *   error — the maintainer must look at this. Alerted on.
