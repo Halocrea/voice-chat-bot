@@ -21,6 +21,8 @@ export interface DiscordAlertOptions {
   windowMs?: number;
   /** Hard ceiling whatever the variety of errors, to survive a storm */
   maxPerMinute?: number;
+  /** Length of the ceiling window. Only ever overridden by the tests. */
+  minuteMs?: number;
 }
 
 interface Repeat {
@@ -50,10 +52,13 @@ export class DiscordAlertTransport extends Transport {
   private readonly windowMs: number;
   private readonly maxPerMinute: number;
 
+  private readonly minuteMs: number;
+
   private readonly repeats = new Map<string, Repeat>();
   private minuteStartedAt = Date.now();
   private sentThisMinute = 0;
   private suppressedThisMinute = 0;
+  private suppressionTimer?: NodeJS.Timeout;
 
   constructor(options: DiscordAlertOptions) {
     super({ level: 'error' });
@@ -62,6 +67,7 @@ export class DiscordAlertTransport extends Transport {
       options.send ?? ((payload) => postWebhook(this.webhookUrl, payload));
     this.windowMs = options.windowMs ?? 5 * 60_000;
     this.maxPerMinute = options.maxPerMinute ?? 10;
+    this.minuteMs = options.minuteMs ?? 60_000;
   }
 
   log(info: TransformableInfo, next: () => void) {
@@ -113,6 +119,7 @@ export class DiscordAlertTransport extends Transport {
 
     if (this.sentThisMinute >= this.maxPerMinute) {
       this.suppressedThisMinute++;
+      this.scheduleSuppressionNotice();
       return;
     }
 
@@ -120,9 +127,33 @@ export class DiscordAlertTransport extends Transport {
     await this.send(payload);
   }
 
-  private rollMinute(now: number) {
-    if (now - this.minuteStartedAt < 60_000) return;
+  /**
+   * Guarantees the "N suppressed" notice arrives even if nothing is ever sent
+   * again.
+   *
+   * `rollMinute` only runs when something tries to go out, so after a storm
+   * followed by silence the notice would wait indefinitely — and you would
+   * believe you had seen every alert.
+   */
+  private scheduleSuppressionNotice() {
+    if (this.suppressionTimer) return;
 
+    const untilNextMinute = Math.max(
+      0,
+      this.minuteMs - (Date.now() - this.minuteStartedAt),
+    );
+    this.suppressionTimer = setTimeout(() => {
+      this.suppressionTimer = undefined;
+      this.rollMinute(Date.now());
+    }, untilNextMinute + 50);
+    this.suppressionTimer.unref();
+  }
+
+  private rollMinute(now: number) {
+    if (now - this.minuteStartedAt < this.minuteMs) return;
+
+    this.clearSuppressionTimer();
+    const startedAt = this.minuteStartedAt;
     this.minuteStartedAt = now;
     this.sentThisMinute = 0;
 
@@ -135,10 +166,23 @@ export class DiscordAlertTransport extends Transport {
         summaryPayload(
           'Alerts suppressed to keep this channel usable',
           suppressed,
-          now - 60_000,
+          startedAt,
         ),
       ).catch(() => undefined);
     }
+  }
+
+  private clearSuppressionTimer() {
+    if (!this.suppressionTimer) return;
+    clearTimeout(this.suppressionTimer);
+    this.suppressionTimer = undefined;
+  }
+
+  /** Winston calls this on shutdown; leave no timer behind */
+  close() {
+    for (const repeat of this.repeats.values()) clearTimeout(repeat.timer);
+    this.repeats.clear();
+    this.clearSuppressionTimer();
   }
 }
 
