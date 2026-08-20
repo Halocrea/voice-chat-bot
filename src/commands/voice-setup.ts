@@ -6,6 +6,7 @@ import {
   SlashCommandBuilder,
   VoiceChannel,
 } from 'discord.js';
+import { describeThrown, logger } from '../lib/logger';
 import { canConfigureBot, missingBotPermissions } from '../lib/permissions';
 import { respond, respondWithError } from '../lib/replies';
 import {
@@ -297,7 +298,11 @@ async function pinOwnPermissions(
     );
     return null;
   } catch (error) {
-    console.error('Could not pin my own permissions on the category:', error);
+    // The setup still succeeded, and the bot keeps its guild-wide permissions
+    logger.warn('Could not pin my own permissions on the category', {
+      err: describeThrown(error),
+      guildId: interaction.guildId,
+    });
     return `⚠️ I couldn't pin my own permissions on the category, so make sure my role keeps them server-wide. Everything else is ready.`;
   }
 }

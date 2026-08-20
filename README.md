@@ -49,6 +49,17 @@ Setting `DEV_GUILD_ID` deploys the commands to that single server, where they ap
 
 This bot requires **no privileged intent**: everything goes through slash commands, so `MESSAGE CONTENT` can stay off.
 
+### Supervision
+
+The bot logs through [winston](https://github.com/winstonjs/winston), on the console only. Process managers such as pm2, systemd or Docker already capture stdout and rotate it, so persisting logs is left to whichever one you run — writing them a second time from inside the application would only duplicate the work, and wear out flash storage that much faster on small hosts.
+
+Two optional variables turn on the rest:
+
+- **`ALERT_WEBHOOK_URL`** — errors are posted to a Discord webhook. A webhook rather than the bot's own connection, because the connection shares the fate of whatever broke it: this still gets through with the gateway down or the token rejected. Identical errors are reported once per five minutes and then summarised, and a hard ceiling keeps a storm from flooding the channel.
+- **`HEARTBEAT_URL`** — the bot pings an external dead man's switch every few minutes, and only while it is actually connected to Discord. It is the **silence** that alerts you, which is the only way to hear about a bot that died: a dead process sends nothing. It pushes rather than being polled, so it works from behind NAT with no inbound port to open — which matters if you self-host.
+
+Permission errors are logged as warnings and deliberately never alerted: they mean a server administrator has misconfigured their own server, they have already been told, and there is nothing for you to do. An alert channel people learn to ignore is worse than no alert channel at all.
+
 ### Deploy the slash commands
 
 Commands have to be registered with Discord once, and again whenever they change:

@@ -8,6 +8,8 @@ import {
 import * as dotenv from 'dotenv';
 import { commands } from './commands';
 import { handleVoiceEvent } from './controllers/voice-channel';
+import { startHeartbeat } from './lib/heartbeat';
+import { describeThrown, logger } from './lib/logger';
 
 dotenv.config();
 
@@ -15,10 +17,10 @@ dotenv.config();
 // unhandled rejection is fatal, and a restart policy just fed the bot back into
 // the same error. Logging beats dying for an error we already know how to skip.
 process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection:', reason);
+  logger.error('Unhandled rejection', { err: describeThrown(reason) });
 });
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+  logger.error('Uncaught exception', { err: describeThrown(error) });
 });
 
 const registry = new Map(
@@ -33,7 +35,9 @@ const voiceChatBot = new Client({
 
 voiceChatBot.on(Events.ClientReady, (client) => {
   client.user.setActivity(`Made with ❤️`, { type: ActivityType.Listening });
-  console.log(`Logged in as ${client.user.tag}`);
+  logger.info(`Logged in as ${client.user.tag}`, {
+    guilds: client.guilds.cache.size,
+  });
 });
 
 voiceChatBot.on(Events.InteractionCreate, async (interaction) => {
@@ -53,9 +57,12 @@ voiceChatBot.on(Events.InteractionCreate, async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    // Commands handle their own errors; this is the last resort so that a bug
-    // never escapes as an unhandled rejection
-    console.error(error);
+    // Commands handle their own errors; reaching here means one escaped, which
+    // is a bug rather than a misconfigured server
+    logger.error(`/${interaction.commandName} threw past its own handler`, {
+      err: describeThrown(error),
+      guildId: interaction.guildId,
+    });
   }
 });
 
@@ -63,8 +70,16 @@ voiceChatBot.on(Events.VoiceStateUpdate, (oldState, newState) => {
   try {
     handleVoiceEvent(oldState, newState);
   } catch (error) {
-    console.error(error);
+    logger.error('Voice state handler threw', {
+      err: describeThrown(error),
+      guildId: newState.guild.id,
+    });
   }
 });
 
 voiceChatBot.login(process.env.TOKEN);
+
+// Started right away rather than on ready: if the bot never manages to connect,
+// the beats are skipped, the monitor hears silence, and you are told — which is
+// exactly what should happen.
+startHeartbeat(voiceChatBot);

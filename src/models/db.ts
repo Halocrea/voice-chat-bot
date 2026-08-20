@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import { logger } from '../lib/logger';
 
 export type Migration = (db: Database.Database) => void;
 
@@ -29,7 +30,7 @@ export function openDatabase(
       migrations[version](db);
       db.pragma(`user_version = ${version + 1}`);
     })();
-    console.log(`[db] ${fileName}: migrated to version ${version + 1}`);
+    logger.info(`[db] ${fileName}: migrated to version ${version + 1}`);
   }
 
   return db;
