@@ -5,13 +5,15 @@ import {
   GatewayIntentBits,
   MessageFlags,
 } from 'discord.js';
-import * as dotenv from 'dotenv';
 import { commands } from './commands';
 import { handleVoiceEvent } from './controllers/voice-channel';
+// Loads the .env. Imported rather than called here: the modules below are built
+// while they are imported, which happens before any statement in this file.
+import './lib/env';
 import { startHeartbeat } from './lib/heartbeat';
 import { describeThrown, logger } from './lib/logger';
-
-dotenv.config();
+import { reconcileHubs } from './lib/reconcile';
+import { removeAllHubs } from './models/VoiceHub';
 
 // A throwing handler used to take the whole process down: since Node 15 an
 // unhandled rejection is fatal, and a restart policy just fed the bot back into
@@ -38,6 +40,21 @@ voiceChatBot.on(Events.ClientReady, (client) => {
   logger.info(`Logged in as ${client.user.tag}`, {
     guilds: client.guilds.cache.size,
   });
+
+  // Only here: the guild cache is what tells us which sectors still have a
+  // server behind them, and it is only complete once Discord has sent the list
+  reconcileHubs(client);
+});
+
+// Discord emits this on a real removal only — an outage surfaces as
+// `guildUnavailable` instead, so this cannot wipe a live server's setup
+voiceChatBot.on(Events.GuildDelete, (guild) => {
+  const removed = removeAllHubs(guild.id);
+  if (removed) {
+    logger.info(`Removed from a guild, forgot ${removed} sector(s)`, {
+      guildId: guild.id,
+    });
+  }
 });
 
 voiceChatBot.on(Events.InteractionCreate, async (interaction) => {

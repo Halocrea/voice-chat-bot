@@ -36,6 +36,14 @@ export function isManagedCategory(
     .get(guildId, categoryId);
 }
 
+/** Every guild the bot still holds a sector for, however many */
+export function getGuildIdsWithHubs(): string[] {
+  return db
+    .prepare<[], { guildId: string }>('SELECT DISTINCT guildId FROM voice_hub')
+    .all()
+    .map((row) => row.guildId);
+}
+
 export function getHubsForGuild(guildId: string): VoiceHub[] {
   return db
     .prepare<[string], VoiceHub>('SELECT * FROM voice_hub WHERE guildId = ?')

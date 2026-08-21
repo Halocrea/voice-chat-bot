@@ -69,12 +69,31 @@ npm run build
 npm run deploy
 ```
 
+### What a host needs
+
+Anywhere Node runs will do, provided three things:
+
+- **Node 22 or newer.** `better-sqlite3` does not support anything older.
+- **A process that stays up.** The bot holds an open websocket to Discord; any host that sleeps idle processes, or restarts them on request only, will leave it deaf.
+- **A filesystem that survives restarts**, for the five SQLite files in `saves/`. On a host with an ephemeral disk, every restart comes back to an empty configuration and every server has to be set up again.
+
+No inbound port and no public address are needed — every connection the bot makes is outbound. Resource use is modest: a small VPS or a Raspberry Pi handles it comfortably.
+
 ### Install and run with Docker
 
 ```sh
 docker build -t voice-chat-bot .
-docker run -d -v /absolute/host/path/to/saves/:app/saves --restart=always --name=voice-chat-bot voice-chat-bot
+docker run -d \
+  --name voice-chat-bot \
+  --env-file .env \
+  -v /absolute/host/path/to/saves:/app/saves \
+  --restart unless-stopped \
+  voice-chat-bot
 ```
+
+`--env-file` is what hands the container its token; without it the bot starts with an empty configuration and immediately fails to log in. The volume is what makes the databases outlive the container.
+
+`unless-stopped` rather than `always`, so a container you deliberately stop stays stopped across a reboot.
 
 ### Install with npm
 
