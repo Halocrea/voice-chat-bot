@@ -10,7 +10,8 @@
     "build": "tsc",
     "start": "node ./build/index.js",
     "deploy": "node ./build/deploy-commands.js",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "announce": "node ./build/announce.js"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

@@ -21,3 +21,6 @@ yarn-error.log*
 
 .DS_Store
 client/.DS_Store
+# One-off announcement text: personal, dated, and none of a fork's business.
+# Place it by hand next to the bot before running `npm run announce`.
+announcement.md
