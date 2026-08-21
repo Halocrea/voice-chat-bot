@@ -12,7 +12,7 @@ import { handleVoiceEvent } from './controllers/voice-channel';
 import './lib/env';
 import { startHeartbeat } from './lib/heartbeat';
 import { describeThrown, logger } from './lib/logger';
-import { reconcileHubs } from './lib/reconcile';
+import { scheduleReconciliation } from './lib/reconcile';
 import { removeAllHubs } from './models/VoiceHub';
 
 // A throwing handler used to take the whole process down: since Node 15 an
@@ -41,9 +41,9 @@ voiceChatBot.on(Events.ClientReady, (client) => {
     guilds: client.guilds.cache.size,
   });
 
-  // Only here: the guild cache is what tells us which sectors still have a
-  // server behind them, and it is only complete once Discord has sent the list
-  reconcileHubs(client);
+  // Deferred: the guild cache is what tells us which sectors still have a
+  // server behind them, and it is still filling up at this point
+  scheduleReconciliation(client);
 });
 
 // Discord emits this on a real removal only — an outage surfaces as

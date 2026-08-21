@@ -10,6 +10,24 @@ import { logger } from './logger';
 const MAX_SHARE_REMOVABLE = 0.5;
 
 /**
+ * How long to let the guild list finish arriving before judging it.
+ *
+ * `ready` does not mean "every guild is known": discord.js waits a short while
+ * for them, then fires anyway and lets the stragglers trickle in. On a home
+ * connection serving dozens of guilds, reconciling immediately means grading a
+ * list that is still filling up — observed on the first real start, where 32 of
+ * 74 guilds had arrived.
+ */
+const SETTLE_DELAY_MS = 60_000;
+
+/** Reconciles once the guild list has had time to settle. Returns a canceller. */
+export function scheduleReconciliation(client: Client<true>): () => void {
+  const timer = setTimeout(() => reconcileHubs(client), SETTLE_DELAY_MS);
+  timer.unref();
+  return () => clearTimeout(timer);
+}
+
+/**
  * Drops the sectors of guilds the bot is no longer in.
  *
  * Nothing ever cleaned up after a removal, so the table has been drifting since

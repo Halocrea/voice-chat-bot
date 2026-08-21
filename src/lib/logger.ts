@@ -55,12 +55,36 @@ export function levelFor(error: unknown): 'warn' | 'error' {
   return isPermissionError(error) ? 'warn' : 'error';
 }
 
+/** Rendered by the line builder below, everything else is context */
+const OWN_FIELDS = new Set(['level', 'message', 'timestamp', 'err']);
+
+/**
+ * Turns the leftover fields into `key=value` pairs.
+ *
+ * Without this every piece of context a caller attaches — which guild, which
+ * category, how many servers — is silently dropped on the floor, and the log
+ * says less than the code believes it says.
+ */
+function contextOf(info: Record<string, unknown>): string {
+  return Object.entries(info)
+    .filter(([key, value]) => !OWN_FIELDS.has(key) && value !== undefined)
+    .map(([key, value]) => {
+      const rendered =
+        typeof value === 'object' ? JSON.stringify(value) : String(value);
+      return `${key}=${rendered}`;
+    })
+    .join(' ');
+}
+
 const consoleFormat = combine(
   colorize({ level: true }),
   timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   printf((info) => {
     const error = info.err as LoggedError | undefined;
-    const line = `${info.timestamp} ${info.level} ${info.message}`;
+    const context = contextOf(info);
+    const line =
+      `${info.timestamp} ${info.level} ${info.message}` +
+      (context ? ` ${context}` : '');
     if (!error) return line;
 
     // "Missing Permissions" on its own never says what Discord refused, so the
