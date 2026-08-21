@@ -1,6 +1,6 @@
 # Welcome to voice-chat-bot 👋
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
 [![Discord](https://img.shields.io/badge/Discord-support-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/FxtBV5x)
 [![Twitter: HaloCreation](https://img.shields.io/twitter/follow/HaloCreation.svg?style=social)](https://twitter.com/HaloCreation)
 

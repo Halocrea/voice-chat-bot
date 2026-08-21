@@ -1,6 +1,6 @@
 {
   "name": "voice-chat-bot",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "main": "build/index.js",
   "engines": {
     "node": ">=22"
