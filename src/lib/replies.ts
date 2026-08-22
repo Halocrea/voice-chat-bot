@@ -14,8 +14,16 @@ export async function respond(
   interaction: ChatInputCommandInteraction,
   options: Omit<InteractionReplyOptions, 'flags'>,
 ) {
+  // The router defers every command, so the usual case is the first one: the
+  // "thinking" placeholder is already on screen and has to be replaced rather
+  // than answered again. editReply takes no flags — ephemerality was decided
+  // when the interaction was deferred.
+  if (interaction.deferred && !interaction.replied) {
+    return interaction.editReply(options);
+  }
+
   const payload = { ...options, flags: MessageFlags.Ephemeral } as const;
-  if (interaction.replied || interaction.deferred) {
+  if (interaction.replied) {
     return interaction.followUp(payload);
   }
   return interaction.reply(payload);

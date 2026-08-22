@@ -231,7 +231,9 @@ async function lockChannel(
       .setStyle(ButtonStyle.Secondary),
   );
 
-  const response = await interaction.reply({
+  // editReply, not reply: the router already acknowledged this interaction, and
+  // the two permission edits above are exactly why it had to
+  const response = await interaction.editReply({
     content: '🔒 The channel is now **locked**',
     embeds: [
       new EmbedBuilder()
@@ -247,7 +249,6 @@ async function lockChannel(
         .setTimestamp(new Date()),
     ],
     components: [buttons],
-    flags: MessageFlags.Ephemeral,
   });
 
   try {
@@ -295,21 +296,27 @@ async function describeAllowed(
   interaction: ChatInputCommandInteraction<'cached'>,
   ids: string[],
 ): Promise<string> {
-  const names: string[] = [];
+  const roleNames: string[] = [];
+  const memberIds: string[] = [];
+
   for (const id of ids) {
     const role = interaction.guild.roles.cache.get(id);
-    if (role) {
-      names.push(role.toString());
-      continue;
-    }
-    try {
-      const member = await interaction.guild.members.fetch(id);
-      names.push(member.toString());
-    } catch {
-      // That member or role left the guild, nothing to show for it
-    }
+    if (role) roleNames.push(role.toString());
+    else memberIds.push(id);
   }
-  return names.join('\n');
+
+  // Fetched in parallel rather than one after another: serialising these round
+  // trips is what pushed this command past Discord's interaction deadline.
+  // allSettled rather than a bulk fetch because a single member who has left
+  // the guild must not take the whole list down with them.
+  const fetched = await Promise.allSettled(
+    memberIds.map((id) => interaction.guild.members.fetch(id)),
+  );
+  const memberNames = fetched
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => result.value.toString());
+
+  return [...roleNames, ...memberNames].join('\n');
 }
 
 async function unlockChannel(

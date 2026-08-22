@@ -72,6 +72,11 @@ voiceChatBot.on(Events.InteractionCreate, async (interaction) => {
   if (!command) return;
 
   try {
+    // Acknowledged before any work happens. Discord voids an interaction token
+    // after three seconds, and several commands make two or more API calls
+    // before they have anything to say — from a home connection that budget
+    // goes fast. Deferring turns those three seconds into fifteen minutes.
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     await command.execute(interaction);
   } catch (error) {
     // Commands handle their own errors; reaching here means one escaped, which
